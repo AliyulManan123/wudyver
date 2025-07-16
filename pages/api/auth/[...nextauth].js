@@ -1,5 +1,5 @@
-// pages/api/[...nextauth].js
 import NextAuth from "next-auth";
-import { authOptions } from "@/lib/auth"; // Sesuaikan path jika Anda menempatkannya di tempat lain
-
+import {
+  authOptions
+} from "@/lib/auth";
 export default NextAuth(authOptions);

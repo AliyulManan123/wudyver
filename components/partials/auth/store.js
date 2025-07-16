@@ -6,9 +6,7 @@ import {
   v4 as uuidv4
 } from "uuid";
 import Cookies from "js-cookie";
-
 const isClient = typeof window !== "undefined";
-
 const initialUsers = () => {
   if (isClient) {
     const item = localStorage.getItem("users");
@@ -16,7 +14,6 @@ const initialUsers = () => {
   }
   return [];
 };
-
 const initialIsAuth = () => {
   if (isClient) {
     const item = localStorage.getItem("isAuth");
@@ -24,7 +21,6 @@ const initialIsAuth = () => {
   }
   return false;
 };
-
 export const fetchUsersFromAPI = createAsyncThunk("auth/fetchUsers", async () => {
   try {
     const res = await fetch("/api/user/stats");
@@ -36,7 +32,6 @@ export const fetchUsersFromAPI = createAsyncThunk("auth/fetchUsers", async () =>
     return [];
   }
 });
-
 export const authSlice = createSlice({
   name: "auth",
   initialState: {
@@ -47,15 +42,14 @@ export const authSlice = createSlice({
     handleRegister: (state, action) => {
       const {
         name,
-        email,
+        email
       } = action.payload;
       const exists = state.users.some(user => user.email === email);
       if (exists) return;
-
       const newUser = {
         id: uuidv4(),
         name: name,
-        email: email,
+        email: email
       };
       state.users.push(newUser);
       if (isClient) {
@@ -81,7 +75,7 @@ export const authSlice = createSlice({
       state.users = action.payload.map(user => ({
         id: user._id || uuidv4(),
         name: user.email?.split("@")[0] || "Unknown",
-        email: user.email,
+        email: user.email
       }));
       if (isClient) {
         localStorage.setItem("users", JSON.stringify(state.users));
@@ -89,11 +83,9 @@ export const authSlice = createSlice({
     });
   }
 });
-
 export const {
   handleRegister,
   handleLogin,
   handleLogout
 } = authSlice.actions;
-
 export default authSlice.reducer;

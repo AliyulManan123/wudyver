@@ -1,33 +1,33 @@
-import { NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import {
+  NextResponse
+} from "next/server";
+import {
+  getToken
+} from "next-auth/jwt";
 import apiConfig from "@/configs/apiConfig";
 import axios from "axios";
-import { RateLimiterMemory } from "rate-limiter-flexible";
+import {
+  RateLimiterMemory
+} from "rate-limiter-flexible";
 
 function getClientIp(req) {
   return req.ip || req.headers.get("x-forwarded-for") || "unknown";
 }
-
 const DOMAIN_URL = apiConfig.DOMAIN_URL || "localhost";
 const NEXTAUTH_SECRET = apiConfig.JWT_SECRET;
 const DEFAULT_PROTOCOL = "https://";
-
 const axiosInstance = axios.create({
   headers: {
     "Content-Type": "application/json",
-    "Accept-Encoding": "gzip, deflate, br, zstd",
-  },
+    "Accept-Encoding": "gzip, deflate, br, zstd"
+  }
 });
-
 const rateLimiter = new RateLimiterMemory({
   points: apiConfig.LIMIT_POINTS,
-  duration: apiConfig.LIMIT_DURATION,
+  duration: apiConfig.LIMIT_DURATION
 });
-
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.).*)',
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.).*)"]
 };
 
 function ensureProtocol(url, defaultProtocol) {
@@ -36,16 +36,14 @@ function ensureProtocol(url, defaultProtocol) {
   }
   return url;
 }
-
 export async function middleware(req) {
   const url = new URL(req.url);
-  const { pathname } = url;
+  const {
+    pathname
+  } = url;
   const ipAddress = getClientIp(req);
-
   console.log(`[Middleware] Menerima permintaan untuk: ${pathname} dari IP: ${ipAddress}`);
-
   let response = NextResponse.next();
-
   try {
     const isApiRoute = pathname.startsWith("/api");
     const isLoginRoute = pathname === "/login";
@@ -53,12 +51,12 @@ export async function middleware(req) {
     const isAuthPage = isLoginRoute || isRegisterRoute;
     const isAnalyticsRoute = pathname === "/analytics";
     const isRootRoute = pathname === "/";
-
-    const nextAuthToken = await getToken({ req, secret: NEXTAUTH_SECRET });
+    const nextAuthToken = await getToken({
+      req: req,
+      secret: NEXTAUTH_SECRET
+    });
     const isAuthenticated = !!nextAuthToken;
-
-    console.log(`[Middleware] Pathname: ${pathname}, Autentikasi: ${isAuthenticated ? 'Ya' : 'Tidak'}`);
-
+    console.log(`[Middleware] Pathname: ${pathname}, Autentikasi: ${isAuthenticated ? "Ya" : "Tidak"}`);
     response.headers.set("X-Content-Type-Options", "nosniff");
     response.headers.set("X-Frame-Options", "DENY");
     response.headers.set("X-XSS-Protection", "1; mode=block");
@@ -69,11 +67,9 @@ export async function middleware(req) {
     response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
     response.headers.set("Access-Control-Allow-Credentials", "true");
     console.log("[Middleware] Header keamanan telah diatur.");
-
     const isVisitorApi = pathname.includes("/api/visitor");
     const isAuthApi = pathname.includes("/api/auth");
     const isGeneralApi = pathname.includes("/api/general");
-
     if (isApiRoute && !isVisitorApi && !isAuthApi && !isGeneralApi) {
       console.log(`[Middleware] Menerapkan Rate Limiting untuk API: ${pathname}`);
       try {
@@ -105,9 +101,7 @@ export async function middleware(req) {
         });
       }
     }
-
     const redirectUrlWithProtocol = ensureProtocol(DOMAIN_URL, DEFAULT_PROTOCOL);
-
     if (isAuthenticated) {
       if (isAuthPage) {
         console.log(`[Middleware] Pengguna terautentikasi mencoba mengakses halaman otentikasi (${pathname}). Mengarahkan ke /analytics.`);
@@ -116,20 +110,16 @@ export async function middleware(req) {
         console.log(`[Middleware] Pengguna terautentikasi mengakses halaman home (/). Mengarahkan ke /analytics.`);
         return NextResponse.redirect(`${redirectUrlWithProtocol}/analytics`);
       }
-      // Jika terautentikasi dan bukan halaman auth atau root, biarkan user tetap di path yang dituju
       console.log(`[Middleware] Pengguna terautentikasi melanjutkan ke ${pathname}.`);
       return response;
     } else {
-      // Jika tidak terautentikasi
       if (isAnalyticsRoute || isRootRoute) {
         console.log(`[Middleware] Pengguna belum terautentikasi mencoba mengakses ${pathname}. Mengarahkan ke /login.`);
         return NextResponse.redirect(`${redirectUrlWithProtocol}/login`);
       }
-      // Jika tidak terautentikasi dan bukan halaman yang dilindungi, biarkan user di path yang dituju (misal: halaman publik lainnya)
       console.log(`[Middleware] Pengguna belum terautentikasi melanjutkan ke ${pathname}.`);
       return response;
     }
-
   } catch (error) {
     console.error("[Middleware] Kesalahan tidak tertangani:", error);
     return new NextResponse(JSON.stringify({
@@ -153,13 +143,11 @@ export async function middleware(req) {
         const currentUrl = new URL(req.url);
         const currentPathname = currentUrl.pathname;
         const baseURL = ensureProtocol(DOMAIN_URL, DEFAULT_PROTOCOL);
-
         const isApiRoute = currentPathname.startsWith("/api");
         const isVisitorApi = currentPathname.includes("/api/visitor");
         const isAuthApi = currentPathname.includes("/api/auth");
         const isGeneralApi = currentPathname.includes("/api/general");
         const isAuthPage = currentPathname === "/login" || currentPathname === "/register";
-
         if (isApiRoute && !isVisitorApi && !isAuthApi && !isGeneralApi) {
           console.log(`[Middleware] Mengirim data permintaan API untuk tracking: ${currentPathname}`);
           await axiosInstance.get(`${baseURL}/api/visitor/req`);

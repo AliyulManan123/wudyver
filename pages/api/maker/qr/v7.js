@@ -66,8 +66,8 @@ export default async function handler(req, res) {
   }
   try {
     const result = await generator.generateQRCode(params);
-    res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Content-Disposition', 'inline; filename="qrcode.png"');
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Content-Disposition", 'inline; filename="qrcode.png"');
     return res.status(200).send(result);
   } catch (error) {
     res.status(500).json({

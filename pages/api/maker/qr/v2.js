@@ -1,5 +1,4 @@
 import axios from "axios";
-
 const themes = {
   1: {
     bodyColor: "#000000",
@@ -42,7 +41,6 @@ const themes = {
     bgColor: "#ABB2B9"
   }
 };
-
 class QRCodeGenerator {
   constructor() {
     this.defaultPayload = {
@@ -74,14 +72,12 @@ class QRCodeGenerator {
       file: "png"
     };
   }
-
   getThemeConfig(theme) {
     if (theme === "random") {
       theme = Math.floor(Math.random() * 10) + 1;
     }
     return themes[theme] || themes[1];
   }
-
   async generate({
     data,
     theme,
@@ -90,7 +86,6 @@ class QRCodeGenerator {
     if (!data) {
       throw new Error("Parameter 'data' wajib disertakan.");
     }
-
     const themeConfig = this.getThemeConfig(theme);
     const payload = {
       ...this.defaultPayload,
@@ -102,7 +97,6 @@ class QRCodeGenerator {
       },
       ...rest
     };
-
     try {
       const {
         data: responseData
@@ -122,37 +116,30 @@ class QRCodeGenerator {
       throw new Error(error.response?.data || error.message);
     }
   }
-
   async getQRImageBuffer(input) {
     const imageData = await this.generate(input);
-
     if (imageData && imageData.imageUrl) {
       const imageUrl = "https:" + imageData.imageUrl;
       const imageResponse = await axios.get(imageUrl, {
-        responseType: 'arraybuffer'
+        responseType: "arraybuffer"
       });
       return Buffer.from(imageResponse.data);
-
     } else if (imageData && imageData.base64) {
       const base64Data = imageData.base64.replace(/^data:image\/png;base64,/, "");
-      return Buffer.from(base64Data, 'base64');
+      return Buffer.from(base64Data, "base64");
     } else {
       throw new Error("Tidak dapat mengambil data gambar dari API.");
     }
   }
 }
-
 export default async function handler(req, res) {
   const qrGenerator = new QRCodeGenerator();
   try {
     const input = req.method === "GET" ? req.query : req.body;
-
     const imageBuffer = await qrGenerator.getQRImageBuffer(input);
-
-    res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Content-Disposition', 'inline; filename="qrcode.png"');
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Content-Disposition", 'inline; filename="qrcode.png"');
     return res.status(200).send(imageBuffer);
-
   } catch (error) {
     res.status(500).json({
       error: error.message || "Gagal membuat QR Code."

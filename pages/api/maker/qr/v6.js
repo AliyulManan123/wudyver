@@ -175,8 +175,8 @@ export default async function handler(req, res) {
         error: result.error
       });
     }
-    res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Content-Disposition', 'inline; filename="qrcode.png"');
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Content-Disposition", 'inline; filename="qrcode.png"');
     return res.status(200).send(result);
   } catch (error) {
     return res.status(500).json({

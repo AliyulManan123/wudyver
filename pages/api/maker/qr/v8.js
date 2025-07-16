@@ -41,8 +41,8 @@ export default async function handler(req, res) {
   const generator = new ImageGenerator();
   try {
     const buffer = await generator.getImageBuffer(params);
-    res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Content-Disposition', 'inline; filename="qrcode.png"');
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Content-Disposition", 'inline; filename="qrcode.png"');
     return res.status(200).send(buffer);
   } catch (error) {
     res.status(500).json({

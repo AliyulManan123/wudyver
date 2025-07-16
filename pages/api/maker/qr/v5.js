@@ -102,9 +102,9 @@ export default async function handler(req, res) {
           });
         }
         const qrImageBuffer = await qr.create(params);
-        res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Content-Disposition', 'inline; filename="qrcode.png"');
-    return res.status(200).send(qrImageBuffer);
+        res.setHeader("Content-Type", "image/png");
+        res.setHeader("Content-Disposition", 'inline; filename="qrcode.png"');
+        return res.status(200).send(qrImageBuffer);
       case "read":
         if (params.url) {
           result = await qr.read({
