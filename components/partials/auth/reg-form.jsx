@@ -7,7 +7,7 @@ import Icon from '@/components/ui/Icon';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { useRouter } => from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Checkbox from '@/components/ui/Checkbox';
 import Button from '@/components/ui/Button';
 import { signIn, useSession } from 'next-auth/react';
