@@ -32,7 +32,7 @@ export default NextAuth({
               name: user.email?.split("@")[0] || "User",
               email: user.email,
               token: result.token,
-              isNewSignIn: true, // Pastikan ini disetel saat login berhasil via credentials
+              isNewSignIn: true,
             };
           } else {
             throw new Error(result.message || "Invalid credentials");
@@ -57,7 +57,6 @@ export default NextAuth({
       if (user) {
         token.id = user.id;
         token.email = user.email;
-        // isNewSignIn hanya akan ada jika user berasal dari authorize (login/register baru)
         token.isNewSignIn = user.isNewSignIn || false;
         if (user.token) {
           token.apiToken = user.token;
@@ -67,9 +66,8 @@ export default NextAuth({
       if (account) {
         token.accessToken = account.access_token;
         token.provider = account.provider;
-        // Untuk OAuth, tandai sebagai isNewSignIn saat pertama kali masuk (saat 'account' ada)
-        if (!token.isNewSignIn) { // Hindari menimpa jika sudah disetel dari credentials
-             token.isNewSignIn = true;
+        if (!token.isNewSignIn) {
+          token.isNewSignIn = true;
         }
       }
       return token;
@@ -86,25 +84,11 @@ export default NextAuth({
       }
       return session;
     },
-
-    async signIn({ user, account, profile, email, credentials, url }) {
-        // NextAuth secara otomatis mengarahkan ke callbackUrl setelah berhasil
-        // Jika tidak ada callbackUrl, ia akan mengarahkan ke root (/)
-        // atau jika diatur dalam pages.signIn, akan ke sana.
-        // Cukup kembalikan true untuk membiarkan NextAuth menangani redirect default
-        // atau string untuk redirect kustom.
-        // Karena Anda ingin selalu ke /analytics, ini sudah benar.
-      return "/analytics";
-    },
   },
   pages: {
     signIn: "/login",
     signOut: "/logout",
-    error: "/error",
+    error: "/not-found",
   },
   secret: apiConfig.JWT_SECRET,
-  session: {
-    strategy: "jwt",
-    maxAge: 1 * 24 * 60 * 60,
-  },
 });
