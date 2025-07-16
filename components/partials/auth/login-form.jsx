@@ -35,15 +35,15 @@ const LoginPage = () => {
   const { data: session, status } = useSession();
 
   useEffect(() => {
+    // Pastikan efek ini hanya berjalan setelah sesi dimuat
     if (status === 'authenticated') {
       Cookies.set('is_authenticated', 'true', { expires: 7 });
 
+      // Hanya tampilkan toast sukses dan log saat login baru (isNewSignIn true)
+      // Ini mencegah toast muncul setiap kali halaman refresh saat sudah login
       if (session?.isNewSignIn) {
         toast.success('Login berhasil! Mengalihkan...');
-      } else if (session && !session.isNewSignIn) {
-        console.log("Session already active, redirecting.");
       }
-
       dispatch(handleLogin(true));
       router.replace('/analytics');
     } else if (status === 'unauthenticated') {
@@ -66,7 +66,7 @@ const LoginPage = () => {
     setLoadingCredential(true);
     try {
       const signInResult = await signIn('credentials', {
-        redirect: false,
+        redirect: false, // Penting: Next-Auth tidak akan langsung redirect, kita handle di useEffect
         email: data.email,
         password: data.password,
       });
@@ -80,6 +80,7 @@ const LoginPage = () => {
           toast.error(signInResult.error || 'Login gagal. Silakan coba lagi.');
         }
       }
+      // Jika tidak ada error, useEffect akan mendeteksi status 'authenticated' dan melakukan redirect
     } catch (err) {
       toast.error('Terjadi kesalahan yang tidak terduga: ' + err.message);
     } finally {
@@ -95,7 +96,10 @@ const LoginPage = () => {
     }
 
     try {
+      // Untuk OAuth, NextAuth akan secara otomatis mengarahkan setelah autentikasi berhasil
+      // dan callbackUrl akan digunakan sebagai tujuan redirect.
       await signIn(provider, { callbackUrl: '/analytics' });
+      // Setelah ini, useEffect di atas akan menangkap status 'authenticated' dan mengarahkan lebih lanjut
     } catch (err) {
       toast.error(`Terjadi kesalahan saat login dengan ${provider}: ${err.message}`);
     } finally {
@@ -118,6 +122,7 @@ const LoginPage = () => {
     );
   }
 
+  // Jika sudah terautentikasi, tampilkan pesan pengalihan
   if (status === 'authenticated') {
     return (
       <div className="w-full px-2 py-6 text-center text-slate-700 dark:text-slate-300">
@@ -129,6 +134,7 @@ const LoginPage = () => {
     );
   }
 
+  // Tampilkan form login jika belum terautentikasi
   return (
     <div className="w-full px-2 py-6">
       <div className="w-full p-6 border rounded-2xl shadow-lg bg-white dark:bg-slate-800 text-card-foreground">

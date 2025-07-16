@@ -7,7 +7,7 @@ import Icon from '@/components/ui/Icon';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { useRouter } from 'next/navigation';
+import { useRouter } => from 'next/navigation';
 import Checkbox from '@/components/ui/Checkbox';
 import Button from '@/components/ui/Button';
 import { signIn, useSession } from 'next-auth/react';
@@ -89,23 +89,20 @@ const RegForm = () => {
         return;
       }
 
-      toast.success('Pendaftaran berhasil! Mengalihkan ke login...');
+      toast.success('Pendaftaran berhasil! Mencoba login otomatis...');
 
       // Attempt to sign in immediately after successful registration
+      // This will update the session status, which triggers the useEffect
       const signInResult = await signIn('credentials', {
-        redirect: false, // Prevent Next-Auth from redirecting immediately
+        redirect: false, // Next-Auth tidak akan langsung redirect
         email: data.email,
         password: data.password,
       });
 
       if (signInResult?.error) {
-        // If auto-sign-in fails, inform the user to login manually
         toast.error(signInResult.error || 'Gagal masuk secara otomatis setelah pendaftaran. Silakan login manual.');
-      } else {
-        // Auto-sign-in successful; useEffect will handle redirection
-        // No need for an extra toast here as the useEffect will trigger on session update
       }
-
+      // Jika tidak ada error, useEffect akan mendeteksi status 'authenticated' dan melakukan redirect
     } catch (err) {
       toast.error(err.message || 'Terjadi kesalahan saat pendaftaran atau login.');
     } finally {
@@ -122,7 +119,6 @@ const RegForm = () => {
 
     try {
       await signIn(provider, { callbackUrl: '/analytics' });
-      // Next-Auth handles the redirect for OAuth providers, so no need for manual toast here
     } catch (err) {
       toast.error(`Terjadi kesalahan saat pendaftaran dengan ${provider}: ${err.message}`);
     } finally {

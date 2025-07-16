@@ -12,7 +12,7 @@ export default NextAuth({
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         try {
           const res = await fetch(`https://${apiConfig.DOMAIN_URL}/api/auth-v2/sign-in`, {
             method: "POST",
@@ -25,14 +25,14 @@ export default NextAuth({
 
           const result = await res.json();
 
-          if (res.ok && result.user && result.token) { // Ensure result.token exists
+          if (res.ok && result.user && result.token) {
             const user = result.user;
             return {
               id: user._id,
               name: user.email?.split("@")[0] || "User",
               email: user.email,
-              isNewSignIn: true,
-              token: result.token, // Store the 'token' from your API response here
+              token: result.token,
+              isNewSignIn: true, // Pastikan ini disetel saat login berhasil via credentials
             };
           } else {
             throw new Error(result.message || "Invalid credentials");
@@ -57,17 +57,20 @@ export default NextAuth({
       if (user) {
         token.id = user.id;
         token.email = user.email;
-        token.isNewSignIn = user.isNewSignIn;
-        // If the user object from Credentials provider has a 'token' property
+        // isNewSignIn hanya akan ada jika user berasal dari authorize (login/register baru)
+        token.isNewSignIn = user.isNewSignIn || false;
         if (user.token) {
-          token.apiToken = user.token; // Store it as 'apiToken' in the JWT
+          token.apiToken = user.token;
         }
       }
 
-      // For OAuth providers, `account.access_token` is automatically provided by NextAuth
       if (account) {
-        token.accessToken = account.access_token; // This is the OAuth provider's access token
+        token.accessToken = account.access_token;
         token.provider = account.provider;
+        // Untuk OAuth, tandai sebagai isNewSignIn saat pertama kali masuk (saat 'account' ada)
+        if (!token.isNewSignIn) { // Hindari menimpa jika sudah disetel dari credentials
+             token.isNewSignIn = true;
+        }
       }
       return token;
     },
@@ -77,9 +80,7 @@ export default NextAuth({
         session.user.id = token.id;
         session.user.email = token.email;
         session.isNewSignIn = token.isNewSignIn;
-        // The token from your API (Credentials provider)
         session.apiToken = token.apiToken;
-        // The access token from OAuth providers
         session.accessToken = token.accessToken;
         session.provider = token.provider;
       }
@@ -87,6 +88,12 @@ export default NextAuth({
     },
 
     async signIn({ user, account, profile, email, credentials, url }) {
+        // NextAuth secara otomatis mengarahkan ke callbackUrl setelah berhasil
+        // Jika tidak ada callbackUrl, ia akan mengarahkan ke root (/)
+        // atau jika diatur dalam pages.signIn, akan ke sana.
+        // Cukup kembalikan true untuk membiarkan NextAuth menangani redirect default
+        // atau string untuk redirect kustom.
+        // Karena Anda ingin selalu ke /analytics, ini sudah benar.
       return "/analytics";
     },
   },
