@@ -26,13 +26,6 @@ const rateLimiter = new RateLimiterMemory({
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - . (any file with a dot, e.g. images, css, js)
-     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.).*)',
   ],
 };
@@ -123,13 +116,16 @@ export async function middleware(req) {
         console.log(`[Middleware] Pengguna terautentikasi mengakses halaman home (/). Mengarahkan ke /analytics.`);
         return NextResponse.redirect(`${redirectUrlWithProtocol}/analytics`);
       }
+      // Jika terautentikasi dan bukan halaman auth atau root, biarkan user tetap di path yang dituju
       console.log(`[Middleware] Pengguna terautentikasi melanjutkan ke ${pathname}.`);
       return response;
     } else {
+      // Jika tidak terautentikasi
       if (isAnalyticsRoute || isRootRoute) {
         console.log(`[Middleware] Pengguna belum terautentikasi mencoba mengakses ${pathname}. Mengarahkan ke /login.`);
         return NextResponse.redirect(`${redirectUrlWithProtocol}/login`);
       }
+      // Jika tidak terautentikasi dan bukan halaman yang dilindungi, biarkan user di path yang dituju (misal: halaman publik lainnya)
       console.log(`[Middleware] Pengguna belum terautentikasi melanjutkan ke ${pathname}.`);
       return response;
     }
