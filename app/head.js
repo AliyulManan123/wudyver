@@ -1,4 +1,3 @@
-import Script from 'next/script';
 import apiConfig from "@/configs/apiConfig";
 
 export default function Head() {
@@ -16,13 +15,6 @@ export default function Head() {
 
   return (
     <>
-      <Script
-        async
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1389266588531643"
-        crossOrigin="anonymous"
-        strategy="afterInteractive"
-      />
-
       <title>DashCode API Dashboard</title>
 
       <link rel="icon" href={faviconPngPath} />

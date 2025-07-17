@@ -39,6 +39,11 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="id">
       <Head>
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1389266588531643"
+          crossOrigin="anonymous"
+        ></script>
       </Head>
       <body className={`${inter.className} font-inter custom-tippy dashcode-app`}>
         <Providers session={session}>
