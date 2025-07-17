@@ -83,6 +83,7 @@ export default function Head() {
       <meta name="robots" content="index, follow" />
       <meta name="generator" content="Next.js 13" />
       <meta name="google-site-verification" content="E5QX7KBlw_hIr1JP7QY6n_A74Uys6lCj-KfGws9UrV4" />
+      <meta name="google-adsense-account" content="ca-pub-1389266588531643"/>
 
       <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" />
     </>
