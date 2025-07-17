@@ -1,0 +1,72 @@
+{
+  "name": "DashCode API Dashboard",
+  "short_name": "DashCode",
+  "description": "DashCode API Dashboard: Template admin open-source Next.js 13 dengan fitur API dan komponen server terbaru. Futuristik, cepat, dan responsif.",
+  "lang": "id-ID",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#121212",
+  "theme_color": "#2196F3",
+  "icons": [
+    {
+      "src": "/images/favicon/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/favicon/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/images/favicon/favicon.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/favicon/favicon.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/favicon/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/assets/images/all-img/widget-bg-1.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Tampilan Dashboard Utama"
+    },
+    {
+      "src": "/assets/images/all-img/widget-bg-2.png",
+      "sizes": "640x1136",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Tampilan Mobile Aplikasi"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard Cepat",
+      "short_name": "Dashboard",
+      "description": "Akses langsung ke halaman dashboard utama.",
+      "url": "/",
+      "icons": [{ "src": "/assets/images/icon/home.svg", "sizes": "96x96" }]
+    },
+    {
+      "name": "Lihat Pengaturan",
+      "short_name": "Pengaturan",
+      "description": "Mengelola preferensi aplikasi Anda.",
+      "url": "/settings",
+      "icons": [{ "src": "/assets/images/icon/file-1.svg", "sizes": "96x96" }]
+    }
+  ]
+}
