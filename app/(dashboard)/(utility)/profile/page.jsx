@@ -6,41 +6,65 @@ import Icon from "@/components/ui/Icon";
 import Card from "@/components/ui/Card";
 import BasicArea from "@/components/partials/chart/appex-chart/BasicArea";
 import { toast, ToastContainer } from "react-toastify";
-import axios from "axios"; // Import Axios
+import axios from "axios";
 import apiConfig from "@/configs/apiConfig";
 
 const ProfilePage = () => {
+  // State untuk informasi klien, diinisialisasi dengan nilai default
   const [info, setInfo] = useState({
-    ip: null,
-    location: null,
-    phone: null,
-    time: null,
-    day: null,
-    device: null,
-    battery: null,
-    network: null,
-    browser: null,
-    language: null,
-    geolocation: null,
-    os: null,
-    screen: null,
-    storage: null,
-    memory: null,
-    connectionType: null,
+    ip: "...",
+    location: "...",
+    phone: "...",
+    time: "...",
+    day: "...",
+    device: "...",
+    battery: "...",
+    network: "...",
+    browser: "...",
+    language: "...",
+    geolocation: "...",
+    os: "...",
+    screen: "...",
+    storage: "...",
+    memory: "...",
+    connectionType: "...",
   });
   const [loadingData, setLoadingData] = useState(true);
   const [dataError, setDataError] = useState(null);
 
-  const [systemStats, setSystemStats] = useState(null);
+  // State untuk statistik sistem, diinisialisasi dengan nilai default
+  const [systemStats, setSystemStats] = useState(null); // Keep null to differentiate initial load
   const [loadingSystemStats, setLoadingSystemStats] = useState(true);
   const [systemStatsError, setSystemStatsError] = useState(null);
 
+  // State untuk dynamicProfileStats, diinisialisasi sebagai state agar tidak di-recreate
+  const [dynamicProfileStats, setDynamicProfileStats] = useState([
+    {
+      title: "Memory Used",
+      value: "...",
+      icon: "ph:cpu-duotone",
+      subtitle: "...",
+      status: "loading", // Tambahkan status untuk indikator
+    },
+    {
+      title: "Total Routes",
+      value: "...",
+      icon: "ph:git-branch-duotone",
+      subtitle: "...",
+      status: "loading",
+    },
+    {
+      title: "System Uptime",
+      value: "...",
+      icon: "ph:clock-duotone",
+      subtitle: "...",
+      status: "loading",
+    },
+  ]);
+
   useEffect(() => {
     const fetchIPInfo = async () => {
-      // Only show initial loading indicator for the first fetch
-      if (!info.ip) {
-        setLoadingData(true);
-      }
+      setLoadingData(true);
       setDataError(null);
       try {
         const res = await fetch("https://ipapi.co/json/");
@@ -168,16 +192,13 @@ const ProfilePage = () => {
     };
 
     fetchIPInfo();
-    const intervalId = setInterval(fetchIPInfo, 30000);
+    const intervalId = setInterval(fetchIPInfo, 30000); // Perbarui setiap 30 detik
     return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
     const fetchSystemData = async () => {
-      // Only show initial loading indicator for the first fetch
-      if (!systemStats) {
-        setLoadingSystemStats(true);
-      }
+      setLoadingSystemStats(true);
       setSystemStatsError(null);
       try {
         const response = await axios.get(
@@ -193,91 +214,66 @@ const ProfilePage = () => {
         ) {
           throw new Error("Invalid system stats data format received from API");
         }
-        setSystemStats(data);
+        setSystemStats(data); // Simpan data mentah
+        setDynamicProfileStats([ // Perbarui state dynamicProfileStats
+          {
+            title: "Memory Used",
+            value: data.Statistik.Memory.used,
+            icon: "ph:cpu-duotone",
+            subtitle: `Total: ${data.Statistik.Memory.total}`,
+            status: "success",
+          },
+          {
+            title: "Total Routes",
+            value: String(data.TotalRoute),
+            icon: "ph:git-branch-duotone",
+            subtitle: `Platform: ${data.Statistik.Platform}`,
+            status: "success",
+          },
+          {
+            title: "System Uptime",
+            value: data.Statistik.Uptime,
+            icon: "ph:clock-duotone",
+            subtitle: `Node: ${data.Statistik.NodeVersion}`,
+            status: "success",
+          },
+        ]);
       } catch (e) {
         console.error("Failed to get system stats:", e);
-        setSystemStatsError(
-          e.response?.data?.message || e.message || "Could not load system statistics."
-        );
+        const errorMessage = e.response?.data?.message || e.message || "Could not load system statistics.";
+        setSystemStatsError(errorMessage);
+        setDynamicProfileStats([ // Perbarui state dynamicProfileStats dengan error
+          {
+            title: "Memory Used",
+            value: "Error",
+            icon: "ph:warning-octagon-duotone",
+            subtitle: errorMessage.substring(0, 30) + (errorMessage.length > 30 ? "..." : ""),
+            status: "error",
+          },
+          {
+            title: "Total Routes",
+            value: "Error",
+            icon: "ph:warning-octagon-duotone",
+            subtitle: errorMessage.substring(0, 30) + (errorMessage.length > 30 ? "..." : ""),
+            status: "error",
+          },
+          {
+            title: "System Uptime",
+            value: "Error",
+            icon: "ph:warning-octagon-duotone",
+            subtitle: errorMessage.substring(0, 30) + (errorMessage.length > 30 ? "..." : ""),
+            status: "error",
+          },
+        ]);
       } finally {
         setLoadingSystemStats(false);
       }
     };
 
-    fetchSystemData(); // Initial call
-    const intervalId = setInterval(fetchSystemData, 3000); // Repeat every 3 seconds
-    return () => clearInterval(intervalId); // Cleanup on unmount
+    fetchSystemData();
+    const intervalId = setInterval(fetchSystemData, 3000); // Perbarui setiap 3 detik
+    return () => clearInterval(intervalId);
   }, []);
-
-  // Initialize with null values or empty strings to avoid "Loading..." after initial fetch
-  let dynamicProfileStats = [
-    {
-      title: "Memory Used",
-      value: null,
-      icon: "ph:cpu-duotone",
-      subtitle: null,
-    },
-    {
-      title: "Total Routes",
-      value: null,
-      icon: "ph:git-branch-duotone",
-      subtitle: null,
-    },
-    {
-      title: "System Uptime",
-      value: null,
-      icon: "ph:clock-duotone",
-      subtitle: null,
-    },
-  ];
-
-  if (loadingSystemStats) {
-    // Initial loading state will be handled by the absence of data, 
-    // and the specific "Loading details..." message in the UI for infoItems.
-    // dynamicProfileStats values are initially null and will be populated once fetched.
-  } else if (systemStatsError) {
-    dynamicProfileStats = [
-      {
-        title: "Memory Used",
-        value: "Error",
-        icon: "ph:warning-octagon-duotone",
-        subtitle: systemStatsError.substring(0, 30) + "...",
-      },
-      {
-        title: "Total Routes",
-        value: "Error",
-        icon: "ph:warning-octagon-duotone",
-        subtitle: systemStatsError.substring(0, 30) + "...",
-      },
-      {
-        title: "System Uptime",
-        value: "Error",
-        icon: "ph:warning-octagon-duotone",
-        subtitle: systemStatsError.substring(0, 30) + "...",
-      },
-    ];
-  } else if (systemStats) {
-    dynamicProfileStats = [
-      {
-        title: "Memory Used",
-        value: systemStats.Statistik.Memory.used,
-        icon: "ph:cpu-duotone",
-        subtitle: `Total: ${systemStats.Statistik.Memory.total}`,
-      },
-      {
-        title: "Total Routes",
-        value: String(systemStats.TotalRoute),
-        icon: "ph:git-branch-duotone",
-        subtitle: `Platform: ${systemStats.Statistik.Platform}`,
-      },
-      {
-        title: "System Uptime",
-        value: systemStats.Statistik.Uptime,
-        icon: "ph:clock-duotone",
-        subtitle: `Node: ${systemStats.Statistik.NodeVersion}`,
-      },
-    ];
-  }
 
   const infoItems = [
     {
@@ -392,7 +388,7 @@ const ProfilePage = () => {
                 >
                   <div
                     className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-br ${
-                      stat.value === "Error"
+                      stat.status === "error"
                         ? "from-red-500/20 to-red-600/20 text-red-600 dark:text-red-400"
                         : "from-teal-500/20 to-emerald-600/20 text-emerald-600 dark:text-emerald-400"
                     }`}
@@ -404,7 +400,7 @@ const ProfilePage = () => {
                       className="text-xl font-semibold text-slate-700 dark:text-slate-200 truncate"
                       title={stat.value}
                     >
-                      {loadingSystemStats ? "..." : stat.value || "N/A"}
+                      {stat.value} {/* Langsung tampilkan nilai dari state dynamicProfileStats */}
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                       {stat.title}
@@ -414,7 +410,7 @@ const ProfilePage = () => {
                         className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 truncate"
                         title={stat.subtitle}
                       >
-                        {loadingSystemStats ? "..." : stat.subtitle || "N/A"}
+                        {stat.subtitle} {/* Langsung tampilkan subtitle */}
                       </p>
                     )}
                   </div>
@@ -440,64 +436,48 @@ const ProfilePage = () => {
               </div>
             </div>
             <div className="p-4 md:p-5">
-              {loadingData && (
-                <div className="flex flex-col items-center justify-center py-8">
-                  <Icon
-                    icon="svg-spinners:blocks-shuffle-3"
-                    className="text-4xl text-emerald-500 mb-3"
-                  />
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Loading details...
-                  </p>
-                </div>
-              )}
-              {dataError && !loadingData && (
-                <div className="p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700/50 rounded-md text-center">
-                  <Icon
-                    icon="ph:warning-octagon-duotone"
-                    className="text-3xl text-red-500 mb-2 mx-auto"
-                  />
-                  <p className="text-sm font-medium text-red-600 dark:text-red-300">
-                    Could not load details
-                  </p>
-                  <p className="text-xs text-red-500 dark:text-red-400 mt-1">
-                    {dataError}
-                  </p>
-                </div>
-              )}
-              {!loadingData && !dataError && (
-                <ul className="space-y-4">
-                  {infoItems.map((item) => (
-                    <li
-                      key={item.label}
-                      className="flex items-start space-x-3 rtl:space-x-reverse"
-                    >
-                      <div className="flex-none text-xl text-emerald-600 dark:text-emerald-400 pt-0.5">
-                        <Icon icon={item.icon || "ph:question-duotone"} />
+              {/* Selalu render UL, dan biarkan item-itemnya menampilkan status loading/error/data */}
+              <ul className="space-y-4">
+                {infoItems.map((item) => (
+                  <li
+                    key={item.label}
+                    className="flex items-start space-x-3 rtl:space-x-reverse"
+                  >
+                    <div className="flex-none text-xl text-emerald-600 dark:text-emerald-400 pt-0.5">
+                      <Icon icon={item.icon || "ph:question-duotone"} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="uppercase text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5 tracking-wider">
+                        {item.label}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="uppercase text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5 tracking-wider">
-                          {item.label}
+                      {item.href ? (
+                        <a
+                          href={item.href}
+                          className="text-sm text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-300 transition-colors break-words"
+                          target={item.target || "_self"}
+                          rel={item.target === "_blank" ? "noopener noreferrer" : ""}
+                        >
+                          {loadingData ? "..." : dataError ? "Error" : item.value || "N/A"}
+                        </a>
+                      ) : (
+                        <div className="text-sm text-slate-700 dark:text-slate-200 break-words">
+                          {loadingData ? "..." : dataError ? "Error" : item.value || "N/A"}
                         </div>
-                        {item.href ? (
-                          <a
-                            href={item.href}
-                            className="text-sm text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-300 transition-colors break-words"
-                            target={item.target || "_self"}
-                            rel={item.target === "_blank" ? "noopener noreferrer" : ""}
-                          >
-                            {item.value || "..."}
-                          </a>
-                        ) : (
-                          <div className="text-sm text-slate-700 dark:text-slate-200 break-words">
-                            {item.value || "..."}
-                          </div>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
+                      )}
+                      {loadingData && (item.label === "IP ADDRESS" || item.label === "LOCATION (IP Based)") && (
+                        <div className="flex items-center text-xs text-slate-500 dark:text-slate-400 mt-1">
+                          <Icon icon="svg-spinners:ring-resize" className="mr-1" /> Loading...
+                        </div>
+                      )}
+                      {dataError && (item.label === "IP ADDRESS" || item.label === "LOCATION (IP Based)") && (
+                        <div className="flex items-center text-xs text-red-500 dark:text-red-400 mt-1">
+                          <Icon icon="ph:warning-octagon-duotone" className="mr-1" /> {dataError.substring(0, 20)}...
+                        </div>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
           </Card>
         </div>

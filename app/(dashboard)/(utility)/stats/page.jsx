@@ -1,20 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-// import dynamic from "next/dynamic"; // Tidak digunakan, bisa dihapus jika tidak ada komponen dynamic lain
-import useDarkMode from "@/hooks/useDarkMode"; // Tetap digunakan untuk styling kondisional jika ada sisa
+import useDarkMode from "@/hooks/useDarkMode";
 import Card from "@/components/ui/Card";
-import Button from "@/components/ui/Button"; // Impor Button jika diperlukan untuk tombol "Try Again"
+import Button from "@/components/ui/Button";
 import { Icon } from '@iconify/react';
-// import SimpleBar from "simplebar-react"; // Tidak digunakan secara aktif di JSX utama, bisa dihapus jika tidak ada list panjang
-
-// Komponen Chart (asumsi sudah ada dan berfungsi)
 import MemoryUsageChart from "@/components/partials/chart/appex-chart/MemoryUsageChart";
-// Komponen StatCard (asumsi sudah ada dan berfungsi)
 import StatCard from "@/components/ui/StatCard";
 
 const LiveStatsPage = () => {
-  const [isDark] = useDarkMode(); // Bisa digunakan untuk styling spesifik dark mode jika diperlukan di luar Card
+  const [isDark] = useDarkMode();
   const [systemStats, setSystemStats] = useState(null);
   const [visitorStats, setVisitorStats] = useState(null);
   const [userStats, setUserStats] = useState(null);
@@ -22,7 +17,6 @@ const LiveStatsPage = () => {
   const [error, setError] = useState(null);
 
   const fetchData = useCallback(async () => {
-    // Tidak set setLoading(true) di sini agar update tidak flicker UI utama
     setError(null);
     try {
       const [systemRes, visitorRes, userRes] = await Promise.all([
@@ -31,7 +25,6 @@ const LiveStatsPage = () => {
         fetch("/api/user/stats"),
       ]);
 
-      // Cek individual response
       if (!systemRes.ok) throw new Error(`System Stats: ${systemRes.statusText} (status ${systemRes.status})`);
       if (!visitorRes.ok) throw new Error(`Visitor Stats: ${visitorRes.statusText} (status ${visitorRes.status})`);
       if (!userRes.ok) throw new Error(`User Stats: ${userRes.statusText} (status ${userRes.status})`);
@@ -46,25 +39,21 @@ const LiveStatsPage = () => {
     } catch (err) {
       setError(err.message);
       console.error("Error fetching stats:", err);
-      // Hindari setLoading(false) di sini jika ingin loading awal saja yang menutupi halaman
     } finally {
-      // setLoading(false) hanya jika ini adalah fetch awal
       if (loading) setLoading(false);
     }
-  }, [loading]); // tambahkan loading sebagai dependensi agar setLoading(false) hanya dijalankan sekali
+  }, [loading]);
 
   useEffect(() => {
-    fetchData(); // Fetch data pertama kali
-    const intervalId = setInterval(fetchData, 5000); // Refresh setiap 5 detik
+    fetchData();
+    const intervalId = setInterval(fetchData, 5000);
 
-    return () => clearInterval(intervalId); // Cleanup interval
+    return () => clearInterval(intervalId);
   }, [fetchData]);
 
-
-  // Komponen Wrapper Card yang Disesuaikan Gayanya
   const StyledSectionCard = ({ children, title, icon, titleClass = "text-lg sm:text-xl", iconClass="text-2xl sm:text-3xl", cardClassName = "" }) => (
     <Card
-      bodyClass="relative p-0 h-full overflow-hidden" // Konsisten
+      bodyClass="relative p-0 h-full overflow-hidden"
       className={`w-full border border-emerald-500/30 dark:border-emerald-600/40 rounded-xl shadow-lg bg-white text-slate-800 dark:bg-slate-800/50 dark:text-slate-100 backdrop-blur-sm bg-opacity-70 dark:bg-opacity-70 ${cardClassName}`}
     >
       {title && (
@@ -81,13 +70,12 @@ const LiveStatsPage = () => {
           </div>
         </div>
       )}
-      <div className="p-4 sm:p-6"> {/* Padding untuk konten di dalam card */}
+      <div className="p-4 sm:p-6">
         {children}
       </div>
     </Card>
   );
 
-  // State Loading Awal yang Lebih Menarik
   if (loading && !systemStats) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-slate-100 dark:bg-slate-900 p-4">
@@ -114,8 +102,7 @@ const LiveStatsPage = () => {
     );
   }
 
-  // State Error yang Ditingkatkan
-  if (error && !loading) { // Tampilkan error hanya jika loading selesai dan ada error
+  if (error && !loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-red-50 dark:bg-red-900/20 p-6 text-center">
         <Icon icon="ph:warning-octagon-duotone" className="text-6xl sm:text-7xl text-red-500 mb-6" />
@@ -126,7 +113,7 @@ const LiveStatsPage = () => {
           Kami tidak dapat memuat statistik saat ini. Silakan coba lagi nanti. <br/> Detail: {error}
         </p>
         <Button
-          onClick={() => { setLoading(true); fetchData(); }} // Set loading true saat retry
+          onClick={() => { setLoading(true); fetchData(); }}
           text="Coba Lagi"
           icon="ph:arrow-clockwise-duotone"
           className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white shadow-md hover:shadow-lg"
@@ -139,7 +126,6 @@ const LiveStatsPage = () => {
 
   return (
     <div className={`w-full min-h-screen px-2 md:px-4 lg:px-6 py-6 ${isDark ? 'bg-slate-900' : 'bg-slate-100'}`}>
-      {/* Header Halaman */}
       <div className="mb-6 md:mb-8">
         <div className="flex items-center mb-1">
             <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg mr-3 shrink-0">
@@ -154,10 +140,8 @@ const LiveStatsPage = () => {
         </p>
       </div>
 
-      {/* Grid untuk Statistik */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-        {/* Kolom Informasi Sistem */}
-        <div className="md:col-span-2 xl:col-span-2"> {/* Span 2 kolom di MD dan XL */}
+        <div className="md:col-span-2 xl:col-span-2">
           <StyledSectionCard title="Informasi Sistem" icon="ph:server-duotone">
             {generalStats ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-4 sm:gap-x-6">
@@ -168,21 +152,19 @@ const LiveStatsPage = () => {
                 <StatCard title="Total Rute API" value={systemStats?.TotalRoute?.toLocaleString() || 'N/A'} icon="ph:tree-structure-duotone" isLoading={!systemStats} iconClass="bg-indigo-100 text-indigo-600 dark:bg-indigo-700 dark:text-indigo-300" />
               </div>
             ) : (
-                 <div className="text-center py-8">
+                <div className="text-center py-8">
                     <Icon icon="eos-icons:loading" className="text-3xl text-slate-500 dark:text-slate-400 animate-spin"/>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">Memuat info sistem...</p>
-                 </div>
+                </div>
             )}
           </StyledSectionCard>
         </div>
 
-        {/* Kolom Penggunaan Memori */}
         <StyledSectionCard title="Penggunaan Memori" icon="ph:memory-duotone">
           {generalStats?.Memory ? (
             <MemoryUsageChart
               used={generalStats.Memory.used}
               total={generalStats.Memory.total}
-              // Pastikan komponen chart ini responsif dan memiliki styling yang sesuai atau bisa diatur
             />
           ) : (
             <div className="flex justify-center items-center h-[200px] sm:h-[240px]">
@@ -192,7 +174,6 @@ const LiveStatsPage = () => {
           )}
         </StyledSectionCard>
 
-        {/* Kolom Statistik Lalu Lintas */}
         <StyledSectionCard title="Statistik Lalu Lintas" icon="ph:users-three-duotone">
           {visitorStats ? (
             <div className="space-y-4">
@@ -212,14 +193,13 @@ const LiveStatsPage = () => {
               />
             </div>
           ): (
-             <div className="text-center py-8">
+              <div className="text-center py-8">
                 <Icon icon="eos-icons:loading" className="text-3xl text-slate-500 dark:text-slate-400 animate-spin"/>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">Memuat data trafik...</p>
-             </div>
+              </div>
           )}
         </StyledSectionCard>
 
-        {/* Kolom Statistik Pengguna */}
         <StyledSectionCard title="Statistik Pengguna" icon="ph:user-list-duotone">
            {userStats ? (
             <StatCard
@@ -227,14 +207,14 @@ const LiveStatsPage = () => {
                 value={userStats.userCount?.toLocaleString() || 'N/A'}
                 icon="ph:user-circle-plus-duotone"
                 iconClass="bg-purple-100 text-purple-600 dark:bg-purple-700 dark:text-purple-300"
-                valueClass="text-2xl sm:text-3xl" // Buat nilai lebih menonjol
+                valueClass="text-2xl sm:text-3xl"
                 isLoading={!userStats}
             />
            ) : (
-             <div className="text-center py-8">
+              <div className="text-center py-8">
                 <Icon icon="eos-icons:loading" className="text-3xl text-slate-500 dark:text-slate-400 animate-spin"/>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">Memuat data pengguna...</p>
-             </div>
+              </div>
            )}
         </StyledSectionCard>
       </div>

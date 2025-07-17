@@ -47,7 +47,6 @@ const AuthorPage = () => {
         }
         const data = await response.json();
         setAuthorData(data);
-        // Setelah data user utama didapat, fetch data repositori untuk stars dan forks
         if (data.public_repos > 0) {
           fetchRepoStats(data.login, data.public_repos);
         }
@@ -67,24 +66,22 @@ const AuthorPage = () => {
       setIsFetchingExtendedStats(true);
       let currentStars = 0;
       let currentForks = 0;
-      const perPage = 100; // Maksimum per halaman
+      const perPage = 100;
       const totalPages = Math.ceil(publicRepoCount / perPage);
 
       try {
         for (let page = 1; page <= totalPages; page++) {
           const repoResponse = await fetch(`https://api.github.com/users/${username}/repos?page=${page}&per_page=${perPage}&sort=updated&direction=desc`);
           if (!repoResponse.ok) {
-            // Mungkin toast error minor atau log saja, jangan sampai menghentikan tampilan profil utama
             console.error(`Gagal mengambil data repositori (halaman ${page}): ${repoResponse.statusText}`);
-            // Jika rate limit, mungkin bisa berhenti lebih awal
             if (repoResponse.status === 403) {
                 toast.warn("Gagal mengambil semua statistik repo karena batasan API. Data mungkin tidak lengkap.");
                 break;
             }
-            continue; // Lanjut ke halaman berikutnya jika memungkinkan, atau break jika fatal
+            continue;
           }
           const reposData = await repoResponse.json();
-          if (reposData.length === 0 && page < totalPages) { // antisipasi jika publicRepoCount tidak sinkron
+          if (reposData.length === 0 && page < totalPages) {
             break;
           }
           reposData.forEach(repo => {
@@ -190,7 +187,7 @@ const AuthorPage = () => {
               {authorData && !isLoading && (
                 <div className="flex flex-col lg:flex-row items-start gap-6 lg:gap-8">
                   <div className="w-full lg:w-1/3 xl:w-1/4 flex-shrink-0 text-center lg:text-left">
-                    {authorData.avatar_url && (
+                    {authorData.avatar_url ? (
                       <Image
                         src={authorData.avatar_url}
                         alt={`Avatar ${authorData.name || authorData.login}`}
@@ -199,6 +196,10 @@ const AuthorPage = () => {
                         className="rounded-full mx-auto lg:mx-0 shadow-xl border-4 border-slate-100 dark:border-slate-700 object-cover"
                         priority
                       />
+                    ) : (
+                      <div className="w-[180px] h-[180px] mx-auto lg:mx-0 rounded-full flex items-center justify-center bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-6xl shadow-xl border-4 border-slate-100 dark:border-slate-700">
+                        <Icon icon="ph:user-circle-fill" />
+                      </div>
                     )}
                     <h2 className="text-2xl xl:text-3xl font-bold text-teal-600 dark:text-teal-300 mt-4 break-words">
                       {authorData.name || authorData.login}
@@ -211,7 +212,7 @@ const AuthorPage = () => {
                         {authorData.bio}
                       </p>
                     )}
-                     {authorData.twitter_username && (
+                      {authorData.twitter_username && (
                         <a href={`https://twitter.com/${authorData.twitter_username}`} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center text-xs text-sky-600 dark:text-sky-400 hover:underline">
                             <Icon icon="mdi:twitter" className="mr-1" /> @{authorData.twitter_username}
                         </a>
@@ -259,13 +260,13 @@ const AuthorPage = () => {
                         {authorData.blog && (
                           <StatItem icon="ph:globe-hemisphere-west-duotone" value={authorData.blog} href={authorData.blog.startsWith('http') ? authorData.blog : `http://${authorData.blog}`} className="sm:col-span-2"/>
                         )}
-                         <StatItem
-                            icon="ph:trophy-duotone"
-                            value="Lihat di Profil GitHub"
-                            label="Achievements"
-                            href={authorData.html_url}
-                            className="sm:col-span-2"
-                        />
+                           <StatItem
+                               icon="ph:trophy-duotone"
+                               value="Lihat di Profil GitHub"
+                               label="Achievements"
+                               href={authorData.html_url}
+                               className="sm:col-span-2"
+                           />
                         <StatItem icon="ph:calendar-heart-duotone" value={`Bergabung: ${formatDate(authorData.created_at)}`} className="sm:col-span-2"/>
                         <StatItem icon="ph:clock-clockwise-duotone" value={`Pembaruan Terakhir: ${formatDate(authorData.updated_at)}`} className="sm:col-span-2"/>
                     </div>
