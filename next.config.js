@@ -1,7 +1,8 @@
-const {
-  PHASE_DEVELOPMENT_SERVER,
-  PHASE_PRODUCTION_BUILD,
-} = require("next/constants");
+const withPWA = require("@ducanh2912/next-pwa").default({
+  dest: "public",
+  register: true,
+  disable: false,
+});
 const {
   createSecureHeaders
 } = require("next-secure-headers");
@@ -16,7 +17,7 @@ const securityHeaders = [...createSecureHeaders({
   key: "Permissions-Policy",
   value: "camera=(), microphone=(), geolocation=(), Browse-topics=()"
 }];
-const nextConfig = {
+const nextConfig = withPWA({
   reactStrictMode: true,
   experimental: {
     appDir: true,
@@ -51,13 +52,6 @@ const nextConfig = {
     });
     return config;
   }
-};
-module.exports = (phase) => {
-  if (phase === PHASE_DEVELOPMENT_SERVER || phase === PHASE_PRODUCTION_BUILD) {
-    const withPWA = require("@ducanh2912/next-pwa").default({
-      dest: "public",
-    });
-    return withPWA(nextConfig);
-  }
-  return nextConfig;
-};
+});
+
+module.exports = nextConfig;
