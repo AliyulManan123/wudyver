@@ -1,5 +1,7 @@
 const withPWA = require("next-pwa");
 const runtimeCaching = require("next-pwa/cache");
+const { GenerateSW } = require('workbox-webpack-plugin');
+
 const {
   createSecureHeaders
 } = require("next-secure-headers");
@@ -42,6 +44,12 @@ const nextConfig = {
       headers: securityHeaders
     }];
   },
+  plugins: [
+    new GenerateSW({
+      clientsClaim: true,
+      skipWaiting: true,
+    }),
+  ],
   webpack: (config, {
     buildId,
     dev,

@@ -115,6 +115,7 @@
     "unlimited-ai": "latest",
     "util": "latest",
     "uuid": "latest",
+    "workbox-webpack-plugin": "latest",
     "ws": "latest",
     "xml2js": "latest",
     "busboy": "latest"
