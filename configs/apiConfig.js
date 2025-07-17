@@ -14,7 +14,6 @@ const GITHUB_ID = process.env.GITHUB_ID || "";
 const GITHUB_SECRET = process.env.GITHUB_SECRET || "";
 const SONIVA_KEY = process.env.NEXT_PUBLIC_SONIVA_KEY || "";
 const SUNOAPI_KEY = process.env.NEXT_PUBLIC_SUNOAPI_KEY || "";
-
 const apiConfig = {
   PASSWORD: PASSWORD,
   MONGODB_URI: MONGODB_URI,
@@ -33,11 +32,10 @@ const apiConfig = {
   GITHUB_ID: GITHUB_ID,
   GITHUB_SECRET: GITHUB_SECRET
 };
-
 const validateAllConfig = () => {
   let hasError = false;
   for (const key in apiConfig) {
-    if (typeof apiConfig[key] === 'string' && apiConfig[key].trim() === '') {
+    if (typeof apiConfig[key] === "string" && apiConfig[key].trim() === "") {
       console.error(`FATAL CONFIG ERROR: ${key} is not defined. Please set it in your environment variables.`);
       hasError = true;
     }
@@ -48,7 +46,5 @@ const validateAllConfig = () => {
     console.log("All essential configuration variables are validated successfully.");
   }
 };
-
 validateAllConfig();
-
 export default apiConfig;
