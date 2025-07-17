@@ -1,6 +1,13 @@
+const withPWA = require('next-pwa')({
+  dest: 'public',
+  // You can add more PWA options here if needed,
+  // for example: disable: process.env.NODE_ENV === 'development'
+});
+
 const {
   createSecureHeaders
 } = require("next-secure-headers");
+
 const securityHeaders = createSecureHeaders({
   frameGuard: "sameorigin",
   xssProtection: "block-rendering",
@@ -10,14 +17,15 @@ const securityHeaders = createSecureHeaders({
   value: "upgrade-insecure-requests"
 }, {
   key: "Permissions-Policy",
-  value: "camera=(), microphone=(), geolocation=(), browsing-topics=()"
+  value: "camera=(), microphone=(), geolocation=(), Browse-topics=()"
 }]);
+
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
     appDir: true,
     serverActions: {
-      bodySizeLimit: "500mb",
+      bodySizeLimit: "5gb",
     },
   },
   compress: true,
@@ -44,4 +52,5 @@ const nextConfig = {
     return config;
   }
 };
-module.exports = nextConfig;
+
+module.exports = withPWA(nextConfig);

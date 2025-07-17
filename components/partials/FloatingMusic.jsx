@@ -371,7 +371,7 @@ const FloatingMusicWidget = () => {
             {!isOpen && (
                 <div
                     className="fixed right-0 z-50 transition-all duration-300"
-                    style={{ top: 'calc(100vh / 12 * 5)' }}
+                    style={{ top: 'calc(100vh / 12 * 2.5)' }}
                 >
                     <div className="flex flex-col space-y-2">
                         <div

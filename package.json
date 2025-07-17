@@ -96,6 +96,7 @@
     "mqtt": "latest",
     "next-secure-headers": "latest",
     "next-auth": "latest",
+    "next-pwa": "latest",
     "node-fetch": "latest",
     "node-html-parser": "latest",
     "ora": "latest",
