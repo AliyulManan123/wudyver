@@ -73,7 +73,7 @@ class Scraper {
 export default async function handler(req, res) {
   const {
     query,
-    limit = 1
+    limit
   } = req.method === "GET" ? req.query : req.body;
   if (!query) {
     return res.status(400).json({

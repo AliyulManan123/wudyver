@@ -15,15 +15,12 @@ const securityHeaders = createSecureHeaders({
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
-    appDir: true
+    appDir: true,
+    serverActions: {
+      bodySizeLimit: "500mb",
+    },
   },
   compress: true,
-  api: {
-    bodyParser: {
-      sizeLimit: false
-    },
-    responseLimit: false
-  },
   images: {
     domains: ["wudysoft.xyz", "cdn.weatherapi.com", "tile.openstreetmap.org", "www.chess.com", "deckofcardsapi.com"]
   },

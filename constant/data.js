@@ -13,10 +13,10 @@ export const menuItems = [{
     childtitle: "Ecommerce Dashboard",
     childlink: "ecommerce"
   }, {
-    childtitle: "Project  Dashbaord",
+    childtitle: "Project Dashbaord",
     childlink: "project"
   }, {
-    childtitle: " CRM Dashbaord",
+    childtitle: "CRM Dashbaord",
     childlink: "crm"
   }, {
     childtitle: "Explorer Dashboard",
@@ -118,11 +118,23 @@ export const menuItems = [{
   link: "#",
   isHide: false,
   child: [{
-    childtitle: "Invoice",
-    childlink: "invoice"
+    childtitle: "Ai Girl",
+    childlink: "ai-girl"
   }, {
-    childtitle: "Pricing",
-    childlink: "pricing"
+    childtitle: "AIO Downloader",
+    childlink: "aio-downloader"
+  }, {
+    childtitle: "Al-Quran",
+    childlink: "al-quran"
+  }, {
+    childtitle: "Alice AI",
+    childlink: "alice-ai"
+  }, {
+    childtitle: "Anon",
+    childlink: "anon"
+  }, {
+    childtitle: "APIs",
+    childlink: "apis"
   }, {
     childtitle: "Arti Nama",
     childlink: "arti-nama"
@@ -130,82 +142,109 @@ export const menuItems = [{
     childtitle: "Beauty JS",
     childlink: "beauty-js"
   }, {
-    childtitle: "Playwright",
-    childlink: "playwright"
-  }, {
-    childtitle: "Openapi",
-    childlink: "openapi"
-  }, {
-    childtitle: "Explorer",
-    childlink: "explorer"
-  }, {
-    childtitle: "FAQ",
-    childlink: "faq"
-  }, {
-    childtitle: "Blog",
-    childlink: "blog"
-  }, {
-    childtitle: "Blank page",
-    childlink: "blank-page"
-  }, {
-    childtitle: "Profile",
-    childlink: "profile"
-  }, {
-    childtitle: "Settings",
-    childlink: "settings"
-  }, {
-    childtitle: "404 page",
-    childlink: "error-page"
-  }, {
-    childtitle: "Coming Soon",
-    childlink: "coming-soon"
-  }, {
-    childtitle: "Under Maintanance page",
-    childlink: "under-construction"
-  }, {
-    childtitle: "Ai Girl",
-    childlink: "ai-girl"
-  }, {
-    childtitle: "Chat",
-    childlink: "chat"
-  }, {
-    childtitle: "Room",
-    childlink: "room"
-  }, {
-    childtitle: "Alice Ai",
-    childlink: "alice-ai"
-  }, {
-    childtitle: "Chatgpt",
-    childlink: "chatgpt"
-  }, {
-    childtitle: "Paste",
-    childlink: "paste"
-  }, {
-    childtitle: "Stats",
-    childlink: "stats"
-  }, {
-    childtitle: "Anon",
-    childlink: "anon"
-  }, {
-    childtitle: "Cai",
+    childtitle: "CAI",
     childlink: "cai"
   }, {
-    childtitle: "Code Share",
-    childlink: "code-share"
-  }, {
-    childtitle: "Posts",
-    childlink: "posts"
-  }, {
-    childtitle: "Users",
-    childlink: "users"
-  }, {
-    childtitle: "Apis",
-    childlink: "apis"
+    childtitle: "Cek Jarak",
+    childlink: "cek-jarak"
   }, {
     childtitle: "Cek Resi",
     childlink: "cek-resi"
   }, {
-    childtitle: "Wsup Ai",
+    childtitle: "Chat",
+    childlink: "chat"
+  }, {
+    childtitle: "ChatGPT",
+    childlink: "chatgpt"
+  }, {
+    childtitle: "Code Share",
+    childlink: "code-share"
+  }, {
+    childtitle: "Combot",
+    childlink: "combot"
+  }, {
+    childtitle: "Compiler",
+    childlink: "compiler"
+  }, {
+    childtitle: "Crotpedia",
+    childlink: "crotpedia"
+  }, {
+    childtitle: "Cuaca",
+    childlink: "cuaca"
+  }, {
+    childtitle: "Drakorkita",
+    childlink: "drakorkita"
+  }, {
+    childtitle: "Explorer",
+    childlink: "explorer"
+  }, {
+    childtitle: "Hi AI",
+    childlink: "hi-ai"
+  }, {
+    childtitle: "HTML2IMG",
+    childlink: "html2img"
+  }, {
+    childtitle: "Jago Kata",
+    childlink: "jago-kata"
+  }, {
+    childtitle: "JavHD",
+    childlink: "javhd"
+  }, {
+    childtitle: "JS Confuser",
+    childlink: "js-confuser"
+  }, {
+    childtitle: "JS Obfuscator",
+    childlink: "js-obfuscator"
+  }, {
+    childtitle: "Lahelu",
+    childlink: "lahelu"
+  }, {
+    childtitle: "Licenses",
+    childlink: "licenses"
+  }, {
+    childtitle: "Ludo",
+    childlink: "ludo"
+  }, {
+    childtitle: "NB Script",
+    childlink: "nb-script"
+  }, {
+    childtitle: "OpenAPI",
+    childlink: "openapi"
+  }, {
+    childtitle: "Paste",
+    childlink: "paste"
+  }, {
+    childtitle: "Playwright",
+    childlink: "playwright"
+  }, {
+    childtitle: "Pornhub",
+    childlink: "pornhub"
+  }, {
+    childtitle: "Posts",
+    childlink: "posts"
+  }, {
+    childtitle: "Room",
+    childlink: "room"
+  }, {
+    childtitle: "Scrape",
+    childlink: "scrape"
+  }, {
+    childtitle: "Tebak Gambar",
+    childlink: "tebak-gambar"
+  }, {
+    childtitle: "Try It",
+    childlink: "try-it"
+  }, {
+    childtitle: "Tuner",
+    childlink: "tuner"
+  }, {
+    childtitle: "Upload",
+    childlink: "upload"
+  }, {
+    childtitle: "Users",
+    childlink: "users"
+  }, {
+    childtitle: "Wsup AI",
     childlink: "wsup-ai"
   }]
 }, {

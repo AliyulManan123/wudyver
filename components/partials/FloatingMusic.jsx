@@ -26,9 +26,8 @@ const FloatingMusicWidget = () => {
     const openCardRef = useRef(null);
     const timeUpdateInterval = useRef(null);
 
-    // Definisi ukuran tombol
-    const btnSize = 'w-10 h-10'; // Mengubah dari w-12 h-12 menjadi w-10 h-10
-    const iconSize = 'text-xl'; // Mengubah dari text-xl menjadi text-lg
+    const btnSize = 'w-10 h-10';
+    const iconSize = 'text-xl';
 
     useEffect(() => {
         const handleKeyDown = (event) => {
@@ -183,11 +182,11 @@ const FloatingMusicWidget = () => {
                 const player = playerRef.current.getInternalPlayer();
                 const state = player.getPlayerState();
                 
-                if (state === 1) { // Playing
+                if (state === 1) {
                     player.pauseVideo();
-                } else if (state === 2) { // Paused
+                } else if (state === 2) {
                     player.playVideo();
-                } else { // Other states (unstarted, ended, etc.)
+                } else {
                     player.playVideo();
                 }
             } catch (error) {
@@ -196,7 +195,6 @@ const FloatingMusicWidget = () => {
             }
         }
     };
-
 
     const playNextSong = () => {
         if (playlist.length === 0) {
@@ -340,6 +338,10 @@ const FloatingMusicWidget = () => {
         }
     };
 
+    const handleTryItClick = () => {
+        window.location.href = '/try-it';
+    };
+
     return (
         <>
             {toastMessage && (
@@ -368,15 +370,25 @@ const FloatingMusicWidget = () => {
 
             {!isOpen && (
                 <div
-                    className="fixed right-0 z-50 transition-all duration-300 cursor-pointer"
+                    className="fixed right-0 z-50 transition-all duration-300"
                     style={{ top: 'calc(100vh / 12 * 5)' }}
-                    onClick={() => setIsOpen(true)}
                 >
-                    <div className={`relative ${btnSize} bg-gradient-to-br from-teal-500 to-cyan-600 rounded-l-xl shadow-xl flex items-center justify-center hover:scale-105 transition-transform border-l-2 border-t-2 border-b-2 border-teal-300`}>
-                        <Icon icon="mdi:music" className={`${iconSize} text-white`} />
-                        {(isPlaying || currentSong) && (
-                            <div className="absolute -top-1 -left-1 w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                        )}
+                    <div className="flex flex-col space-y-2">
+                        <div
+                            className={`relative ${btnSize} bg-gradient-to-br from-teal-500 to-cyan-600 rounded-l-xl shadow-xl flex items-center justify-center hover:scale-105 transition-transform border-l-2 border-t-2 border-b-2 border-teal-300 cursor-pointer`}
+                            onClick={() => setIsOpen(true)}
+                        >
+                            <Icon icon="mdi:music" className={`${iconSize} text-white`} />
+                            {(isPlaying || currentSong) && (
+                                <div className="absolute -top-1 -left-1 w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                            )}
+                        </div>
+                        <div
+                            className={`relative ${btnSize} bg-gradient-to-br from-blue-500 to-purple-600 rounded-l-xl shadow-xl flex items-center justify-center hover:scale-105 transition-transform border-l-2 border-t-2 border-b-2 border-blue-300 cursor-pointer`}
+                            onClick={handleTryItClick}
+                        >
+                            <Icon icon="mdi:play-circle" className={`${iconSize} text-white`} />
+                        </div>
                     </div>
                 </div>
             )}
@@ -391,7 +403,7 @@ const FloatingMusicWidget = () => {
                         }
                     }}
                 >
-                    <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-teal-500/30 dark:border-teal-600/50 w-full max-w-3xl mx-4 md:mx-auto animate-in zoom-in-95 ease-out duration-300">
+                    <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-teal-500/30 dark:border-teal-600/50 w-full max-w-6xl mx-4 md:mx-auto animate-in zoom-in-95 ease-out duration-300">
                         <div className="p-4 border-b border-slate-200 dark:border-slate-700/60">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-3">
