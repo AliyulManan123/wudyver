@@ -4,7 +4,6 @@ import {
   useCallback
 } from "react";
 import DisableDevtool from "disable-devtool";
-
 const DevtoolDetector = () => {
   const freezeWebPage = useCallback(() => {
     if (typeof document !== "undefined") {
@@ -29,11 +28,9 @@ const DevtoolDetector = () => {
       overlay.style.padding = "20px";
       overlay.id = "devtool-freeze-overlay";
       document.body.appendChild(overlay);
-
       let message = "!!! SYSTEM ALERT !!!\n\nAKSES TIDAK SAH: Developer Tools Terdeteksi.\n\nMemulai protokol keamanan: KONEKSI DIPUTUS.\n\nHarap nonaktifkan Developer Tools untuk melanjutkan.\n\nKegagalan untuk mematuhi dapat mengakibatkan pembatasan lebih lanjut.";
       let i = 0;
       let typewritingEffect;
-
       const typeWriter = () => {
         if (i < message.length) {
           overlay.textContent += message.charAt(i);
@@ -44,7 +41,6 @@ const DevtoolDetector = () => {
         }
       };
       typeWriter();
-
       if (typeof console !== "undefined") {
         console.clear();
         console.warn("!!! SYSTEM ALERT !!!");
@@ -56,24 +52,20 @@ const DevtoolDetector = () => {
       debugger;
     }
   }, []);
-
   useEffect(() => {
     DisableDevtool({
-      ondevtoolopen: freezeWebPage,
+      ondevtoolopen: freezeWebPage
     });
-
     const checkWindowSize = () => {
       const threshold = 160;
       if (typeof window !== "undefined" && (window.outerWidth - window.innerWidth > threshold || window.outerHeight - window.innerHeight > threshold)) {
         freezeWebPage();
       }
     };
-
     if (typeof window !== "undefined") {
       window.addEventListener("resize", checkWindowSize);
       checkWindowSize();
     }
-
     return () => {
       if (typeof window !== "undefined") {
         window.removeEventListener("resize", checkWindowSize);
@@ -87,8 +79,6 @@ const DevtoolDetector = () => {
       }
     };
   }, [freezeWebPage]);
-
   return null;
 };
-
 export default DevtoolDetector;

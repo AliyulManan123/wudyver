@@ -1,7 +1,5 @@
 const withPWA = require("@ducanh2912/next-pwa").default({
-  dest: "public",
-  register: true,
-  disable: false,
+  dest: "public"
 });
 const {
   createSecureHeaders
@@ -53,5 +51,4 @@ const nextConfig = withPWA({
     return config;
   }
 });
-
 module.exports = nextConfig;
