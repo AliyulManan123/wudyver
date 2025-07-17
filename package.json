@@ -96,7 +96,7 @@
     "mqtt": "latest",
     "next-secure-headers": "latest",
     "next-auth": "latest",
-    "next-pwa": "latest",
+    "@ducanh2912/next-pwa": "latest",
     "node-fetch": "latest",
     "node-html-parser": "latest",
     "ora": "latest",
@@ -115,7 +115,6 @@
     "unlimited-ai": "latest",
     "util": "latest",
     "uuid": "latest",
-    "workbox-webpack-plugin": "latest",
     "ws": "latest",
     "xml2js": "latest",
     "busboy": "latest"

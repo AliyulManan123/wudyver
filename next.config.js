@@ -1,7 +1,7 @@
-const withPWA = require("next-pwa");
-const runtimeCaching = require("next-pwa/cache");
-const { GenerateSW } = require('workbox-webpack-plugin');
-
+const {
+  PHASE_DEVELOPMENT_SERVER,
+  PHASE_PRODUCTION_BUILD,
+} = require("next/constants");
 const {
   createSecureHeaders
 } = require("next-secure-headers");
@@ -32,24 +32,12 @@ const nextConfig = {
     domains: ["wudysoft.xyz", "cdn.weatherapi.com", "tile.openstreetmap.org", "www.chess.com", "deckofcardsapi.com", "raw.githubusercontent.com"],
     minimumCacheTTL: 60
   },
-  pwa: {
-    dest: "public",
-    register: true,
-    skipWaiting: true,
-    runtimeCaching: runtimeCaching
-  },
   async headers() {
     return [{
       source: "/(.*)",
       headers: securityHeaders
     }];
   },
-  plugins: [
-    new GenerateSW({
-      clientsClaim: true,
-      skipWaiting: true,
-    }),
-  ],
   webpack: (config, {
     buildId,
     dev,
@@ -64,4 +52,12 @@ const nextConfig = {
     return config;
   }
 };
-module.exports = withPWA(nextConfig);
+module.exports = (phase) => {
+  if (phase === PHASE_DEVELOPMENT_SERVER || phase === PHASE_PRODUCTION_BUILD) {
+    const withPWA = require("@ducanh2912/next-pwa").default({
+      dest: "public",
+    });
+    return withPWA(nextConfig);
+  }
+  return nextConfig;
+};
