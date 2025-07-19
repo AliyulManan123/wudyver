@@ -64,6 +64,24 @@ async function performTracking(req) {
     console.error(`[Middleware] Gagal mencatat pengunjung untuk ${req.url}: ${errorMessage}`);
   }
 }
+
+// Define the CSP header string
+const cspHeader = `
+  default-src 'self';
+  script-src 'self' 'unsafe-eval' 'unsafe-inline' https: http:;
+  style-src 'self' 'unsafe-inline';
+  img-src 'self' data: *.googleusercontent.com *.google.com;
+  font-src 'self' data: *.gstatic.com;
+  frame-src 'self' *.google.com;
+  object-src 'none';
+  base-uri 'self';
+  form-action 'self';
+  connect-src 'self';
+  frame-ancestors 'none';
+  block-all-mixed-content;
+  upgrade-insecure-requests;
+`;
+
 export async function middleware(req) {
   const url = new URL(req.url);
   const {
@@ -72,6 +90,7 @@ export async function middleware(req) {
   const ipAddress = getClientIp(req);
   console.log(`[Middleware] Menerima permintaan untuk: ${pathname} dari IP: ${ipAddress}`);
   let response = NextResponse.next();
+
   try {
     const isApiRoute = pathname.startsWith("/api");
     const isLoginRoute = pathname === "/login";
@@ -85,6 +104,8 @@ export async function middleware(req) {
     });
     const isAuthenticated = !!nextAuthToken;
     console.log(`[Middleware] Pathname: ${pathname}, Autentikasi: ${isAuthenticated ? "Ya" : "Tidak"}`);
+
+    // Set all secure headers, including CSP
     response.headers.set("X-Content-Type-Options", "nosniff");
     response.headers.set("X-Frame-Options", "DENY");
     response.headers.set("X-XSS-Protection", "1; mode=block");
@@ -94,10 +115,14 @@ export async function middleware(req) {
     response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
     response.headers.set("Access-Control-Allow-Credentials", "true");
+    response.headers.set('Content-Security-Policy', cspHeader.replace(/\s{2,}/g, ' ').trim());
+
     console.log("[Middleware] Header keamanan telah diatur.");
+
     const isVisitorApi = pathname.includes("/api/visitor");
     const isAuthApi = pathname.includes("/api/auth");
     const isGeneralApi = pathname.includes("/api/general");
+
     if (isApiRoute && !isVisitorApi && !isAuthApi && !isGeneralApi) {
       console.log(`[Middleware] Menerapkan Rate Limiting untuk API: ${pathname}`);
       try {
@@ -124,11 +149,19 @@ export async function middleware(req) {
             "Retry-After": retryAfterSeconds.toString(),
             "X-RateLimit-Limit": totalLimit.toString(),
             "X-RateLimit-Remaining": "0",
-            "X-RateLimit-Reset": Math.ceil((Date.now() + rateLimiterError.msBeforeNext) / 1e3).toString()
+            "X-RateLimit-Reset": Math.ceil((Date.now() + rateLimiterError.msBeforeNext) / 1e3).toString(),
+            // Also add CSP and other security headers to error responses
+            'Content-Security-Policy': cspHeader.replace(/\s{2,}/g, ' ').trim(),
+            "X-Content-Type-Options": "nosniff",
+            "X-Frame-Options": "DENY",
+            "X-XSS-Protection": "1; mode=block",
+            "Referrer-Policy": "strict-origin-when-cross-origin",
+            "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
           }
         });
       }
     }
+
     const redirectUrlWithProtocol = ensureProtocol(DOMAIN_URL, DEFAULT_PROTOCOL);
     if (isAuthenticated) {
       if (isAuthPage) {
@@ -163,6 +196,8 @@ export async function middleware(req) {
       status: 500,
       headers: {
         "Content-Type": "application/json",
+        // Ensure security headers are also sent on error
+        'Content-Security-Policy': cspHeader.replace(/\s{2,}/g, ' ').trim(),
         "X-Content-Type-Options": "nosniff",
         "X-Frame-Options": "DENY",
         "X-XSS-Protection": "1; mode=block",

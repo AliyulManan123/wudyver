@@ -369,7 +369,7 @@ export default async function handler(req, res) {
   const downloader = new XBuddyDownloader();
   try {
     const result = await downloader.download(params);
-    res.status(200).json(result);
+    return res.status(200).json(result);
   } catch (err) {
     res.status(500).json({
       error: "Internal Server Error",

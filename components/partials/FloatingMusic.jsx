@@ -209,7 +209,7 @@ const FloatingMusicWidget = () => {
     };
 
     const onPlayerStateChange = (event) => {
-        if (event.data === 0) { // ended
+        if (event.data === 0) {
             setIsPlaying(false);
             setCurrentTime(0);
             if (timeUpdateInterval.current) {
@@ -217,9 +217,9 @@ const FloatingMusicWidget = () => {
                 timeUpdateInterval.current = null;
             }
             playNextSong();
-        } else if (event.data === 1) { // playing
+        } else if (event.data === 1) {
             setIsPlaying(true);
-        } else if (event.data === 2) { // paused
+        } else if (event.data === 2) {
             setIsPlaying(false);
         }
     };
@@ -277,7 +277,7 @@ const FloatingMusicWidget = () => {
                         }
                     }}
                 >
-                    <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-teal-500/30 dark:border-teal-600/50 w-full max-w-4xl mx-4">
+                    <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-teal-500/30 dark:border-teal-600/50 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
                         <div className="p-4 border-b border-slate-200 dark:border-slate-700/60">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-3">
@@ -324,7 +324,7 @@ const FloatingMusicWidget = () => {
                             </div>
                         </div>
 
-                        <div className="max-h-[calc(100vh-160px)] overflow-y-auto p-4 space-y-4">
+                        <div className="p-4 space-y-4">
                             <div className="flex space-x-2">
                                 <input
                                     type="text"
@@ -344,7 +344,7 @@ const FloatingMusicWidget = () => {
                             </div>
 
                             {searchResults.length > 0 && (
-                                <div className="space-y-2 max-h-48 overflow-y-auto">
+                                <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
                                     {searchResults.map((item, index) => (
                                         <div
                                             key={index}
