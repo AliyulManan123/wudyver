@@ -1,123 +1,86 @@
-import apiConfig from "@/configs/apiConfig";
 import axios from "axios";
-import * as cheerio from "cheerio";
-class MediafireDownloader {
+class MFDownloader {
   constructor() {
-    this.apiBase = `https://${apiConfig.DOMAIN_URL}/api/tools/web/html/v12?url=`;
-    this.userAgent = "Mozilla/5.0 (Linux; Android 12; SM-G996B Build/SP1A.210812.016; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/113.0.5672.162 Mobile Safari/537.36";
+    this.api = "https://www.mediafire.com/api/1.4";
   }
-  normalizeFileOrFolderName(filename) {
-    return filename.replace(/[^\w-_. ]/g, "-");
-  }
-  async download(mediafireUrl) {
-    const match = mediafireUrl.match(/mediafire\.com\/(folder|file|file_premium)\/([a-zA-Z0-9]+)/);
-    if (!match) {
-      console.log(`Invalid link: ${mediafireUrl}`);
-      return {
-        error: "Invalid Mediafire URL"
-      };
-    }
-    const [_, type, key] = match;
-    return type === "file" || type === "file_premium" ? await this.downloadFile(key, mediafireUrl) : await this.downloadFolder(key, mediafireUrl);
-  }
-  async downloadFile(key, mediafireUrl) {
+  async fetch({
+    url
+  }) {
     try {
-      const response = await axios.get(`${this.apiBase}${mediafireUrl}`, {
-        headers: {
-          "User-Agent": this.userAgent
-        }
-      });
-      const $ = cheerio.load(response.data);
-      const link = $("#downloadButton").attr("href");
-      if (!link) {
-        return {
-          error: "Gagal mendapatkan link download dari halaman.",
-          source_html: response.data
-        };
+      if (!url.includes("mediafire.com")) throw new Error("Bukan URL MediaFire");
+      const fileMatch = url.match(/mediafire\.com\/file\/([a-z0-9]+)/i);
+      if (fileMatch) return await this.getFileInfo(fileMatch[1]);
+      const folderMatch = url.match(/mediafire\.com\/folder\/([a-z0-9]+)/i);
+      if (folderMatch) return await this.getFolderContent(folderMatch[1]);
+      throw new Error("URL tidak dikenali sebagai file atau folder");
+    } catch (err) {
+      throw new Error("Gagal ambil data: " + err.message);
+    }
+  }
+  async getFileInfo(quickKey) {
+    const {
+      data
+    } = await axios.get(`${this.api}/file/get_info.php`, {
+      params: {
+        quick_key: quickKey,
+        response_format: "json"
       }
-      return {
-        key: key,
-        url: mediafireUrl,
-        direct_link: link
-      };
-    } catch (error) {
-      console.error(`Error downloading file: ${error.message}`);
-      return {
-        error: "Terjadi kesalahan saat mendownload file.",
-        details: error.message
-      };
-    }
+    });
+    const info = data?.response?.file_info;
+    if (!info || info.ready !== "yes") throw new Error("File tidak tersedia");
+    return {
+      type: "file",
+      name: info.filename,
+      size: +info.size,
+      mimetype: info.mimetype,
+      created: info.created,
+      download: info.links.normal_download
+    };
   }
-  async downloadFolder(key, mediafireUrl) {
-    try {
-      const folderInfo = await this.getFolderInfo(key, mediafireUrl);
-      return {
-        key: key,
-        url: mediafireUrl,
-        folder_info: folderInfo
-      };
-    } catch (error) {
-      console.error(`Error downloading folder: ${error.message}`);
-      return {
-        error: "Terjadi kesalahan saat mendownload folder.",
-        details: error.message
-      };
-    }
-  }
-  async getFolderInfo(folderKey, mediafireUrl) {
-    try {
-      const response = await axios.get(`${this.apiBase}${mediafireUrl}`, {
-        headers: {
-          "User-Agent": this.userAgent
-        }
-      });
-      const $ = cheerio.load(response.data);
-      const results = [];
-      $("li.row_container").each((_, el) => {
-        const elmt = $(el);
-        const name = elmt.find(".item-name").text().trim() || "Unknown Name";
-        const link = elmt.find(".foldername, .filetype_column").attr("href") || "Unknown Link";
-        const size = elmt.find(".file_maindetails .size").text().trim() || "Unknown Size";
-        const date = elmt.find(".file_maindetails .created").text().trim() || "Unknown Date";
-        const type = elmt.hasClass("folder") ? "folder" : "file";
-        if (link) {
-          results.push({
-            name: name,
-            link: link,
-            type: type,
-            size: size,
-            date: date
-          });
-        }
-      });
-      return results.length ? results : {
-        empty: true,
-        message: "Tidak ada file/folder ditemukan."
-      };
-    } catch (error) {
-      console.error(`Error fetching folder info: ${error.message}`);
-      throw new Error("Gagal mengambil informasi folder.");
-    }
+  async getFolderContent(folderKey) {
+    const {
+      data
+    } = await axios.get(`${this.api}/folder/get_content.php`, {
+      params: {
+        folder_key: folderKey,
+        response_format: "json",
+        content_type: "files",
+        filter: "all",
+        order_by: "name",
+        order_direction: "asc",
+        chunk: 1,
+        version: "1.5",
+        r: Math.random().toString(36).slice(2)
+      }
+    });
+    const files = data?.response?.folder_content?.files || [];
+    return {
+      type: "folder",
+      total: files.length,
+      files: files.map(f => ({
+        name: f.filename,
+        size: +f.size,
+        mimetype: f.mimetype,
+        created: f.created,
+        download: f.links.normal_download
+      }))
+    };
   }
 }
 export default async function handler(req, res) {
-  const {
-    url
-  } = req.method === "GET" ? req.query : req.body;
-  if (!url) {
+  const params = req.method === "GET" ? req.query : req.body;
+  if (!params.url) {
     return res.status(400).json({
-      error: "URL is required"
+      error: "Url are required"
     });
   }
   try {
-    const downloader = new MediafireDownloader();
-    const result = await downloader.download(url);
-    return res.status(200).json({
-      result: result
-    });
+    const mf = new MFDownloader();
+    const response = await mf.fetch(params);
+    return res.status(200).json(response);
   } catch (error) {
     res.status(500).json({
-      error: error.message
+      error: error.message || "Internal Server Error"
     });
   }
 }

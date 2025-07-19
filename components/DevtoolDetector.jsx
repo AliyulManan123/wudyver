@@ -4,14 +4,11 @@ import {
   useCallback
 } from "react";
 import DisableDevtool from "disable-devtool";
-
 const DevtoolDetector = () => {
   const freezeWebPage = useCallback(() => {
     if (typeof document !== "undefined") {
       document.body.style.pointerEvents = "none";
       document.body.style.overflow = "hidden";
-      // Blur effect removed - document.body.style.filter = "blur(5px)";
-      
       const overlay = document.createElement("div");
       overlay.style.position = "fixed";
       overlay.style.top = "0";
@@ -29,13 +26,10 @@ const DevtoolDetector = () => {
       overlay.style.textAlign = "center";
       overlay.style.padding = "20px";
       overlay.id = "devtool-freeze-overlay";
-      
       document.body.appendChild(overlay);
-      
       let message = "!!! SYSTEM ALERT !!!\n\nAKSES TIDAK SAH: Developer Tools Terdeteksi.\n\nMemulai protokol keamanan: KONEKSI DIPUTUS.\n\nHarap nonaktifkan Developer Tools untuk melanjutkan.\n\nKegagalan untuk mematuhi dapat mengakibatkan pembatasan lebih lanjut.";
       let i = 0;
       let typewritingEffect;
-      
       const typeWriter = () => {
         if (i < message.length) {
           overlay.textContent += message.charAt(i);
@@ -45,9 +39,7 @@ const DevtoolDetector = () => {
           clearTimeout(typewritingEffect);
         }
       };
-      
       typeWriter();
-      
       if (typeof console !== "undefined") {
         console.clear();
         console.warn("!!! SYSTEM ALERT !!!");
@@ -56,47 +48,35 @@ const DevtoolDetector = () => {
         console.warn("Harap nonaktifkan Developer Tools untuk melanjutkan.");
         console.log("Kegagalan untuk mematuhi dapat mengakibatkan pembatasan lebih lanjut.");
       }
-      
       debugger;
     }
   }, []);
-
   useEffect(() => {
     DisableDevtool({
       ondevtoolopen: freezeWebPage
     });
-
     const checkWindowSize = () => {
       const threshold = 160;
-      if (typeof window !== "undefined" && 
-          (window.outerWidth - window.innerWidth > threshold || 
-           window.outerHeight - window.innerHeight > threshold)) {
+      if (typeof window !== "undefined" && (window.outerWidth - window.innerWidth > threshold || window.outerHeight - window.innerHeight > threshold)) {
         freezeWebPage();
       }
     };
-
     if (typeof window !== "undefined") {
       window.addEventListener("resize", checkWindowSize);
       checkWindowSize();
     }
-
     return () => {
       if (typeof window !== "undefined") {
         window.removeEventListener("resize", checkWindowSize);
       }
-      
       const overlay = document.getElementById("devtool-freeze-overlay");
       if (overlay) {
         overlay.remove();
         document.body.style.pointerEvents = "";
         document.body.style.overflow = "";
-        // Blur cleanup removed since we don't apply blur anymore
-        // document.body.style.filter = "";
       }
     };
   }, [freezeWebPage]);
-
   return null;
 };
-
 export default DevtoolDetector;

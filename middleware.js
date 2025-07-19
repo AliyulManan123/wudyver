@@ -1,5 +1,6 @@
 import {
-  NextResponse
+  NextResponse,
+  NextRequest
 } from "next/server";
 import {
   getToken
@@ -27,7 +28,7 @@ const rateLimiter = new RateLimiterMemory({
   duration: apiConfig.LIMIT_DURATION
 });
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.).*)"]
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"]
 };
 
 function ensureProtocol(url, defaultProtocol) {
@@ -35,6 +36,33 @@ function ensureProtocol(url, defaultProtocol) {
     return defaultProtocol + url;
   }
   return url;
+}
+async function performTracking(req) {
+  try {
+    const currentUrl = new URL(req.url);
+    const currentPathname = currentUrl.pathname;
+    const baseURL = ensureProtocol(DOMAIN_URL, DEFAULT_PROTOCOL);
+    const isApiRoute = currentPathname.startsWith("/api");
+    const isVisitorApi = currentPathname.includes("/api/visitor");
+    const isAuthApi = currentPathname.includes("/api/auth");
+    const isGeneralApi = currentPathname.includes("/api/general");
+    const isAuthPage = currentPathname === "/login" || currentPathname === "/register";
+    if (isApiRoute && !isVisitorApi && !isAuthApi && !isGeneralApi) {
+      console.log(`[Middleware] Mengirim data permintaan API untuk tracking: ${currentPathname}`);
+      await axiosInstance.get(`${baseURL}/api/visitor/req`);
+    } else if (!isApiRoute && !isAuthPage) {
+      console.log(`[Middleware] Mengirim data kunjungan halaman untuk tracking: ${currentPathname}`);
+      await axiosInstance.get(`${baseURL}/api/visitor/visit`);
+      await axiosInstance.post(`${baseURL}/api/visitor/info`, {
+        route: currentPathname,
+        time: new Date().toISOString(),
+        hit: 1
+      });
+    }
+  } catch (err) {
+    const errorMessage = err.response ? `Status ${err.response.status}: ${err.response.data?.message || err.message}` : err.message;
+    console.error(`[Middleware] Gagal mencatat pengunjung untuk ${req.url}: ${errorMessage}`);
+  }
 }
 export async function middleware(req) {
   const url = new URL(req.url);
@@ -105,19 +133,24 @@ export async function middleware(req) {
     if (isAuthenticated) {
       if (isAuthPage) {
         console.log(`[Middleware] Pengguna terautentikasi mencoba mengakses halaman otentikasi (${pathname}). Mengarahkan ke /analytics.`);
+        await performTracking(req);
         return NextResponse.redirect(`${redirectUrlWithProtocol}/analytics`);
       } else if (isRootRoute) {
         console.log(`[Middleware] Pengguna terautentikasi mengakses halaman home (/). Mengarahkan ke /analytics.`);
+        await performTracking(req);
         return NextResponse.redirect(`${redirectUrlWithProtocol}/analytics`);
       }
       console.log(`[Middleware] Pengguna terautentikasi melanjutkan ke ${pathname}.`);
+      await performTracking(req);
       return response;
     } else {
       if (isAnalyticsRoute || isRootRoute) {
         console.log(`[Middleware] Pengguna belum terautentikasi mencoba mengakses ${pathname}. Mengarahkan ke /login.`);
+        await performTracking(req);
         return NextResponse.redirect(`${redirectUrlWithProtocol}/login`);
       }
       console.log(`[Middleware] Pengguna belum terautentikasi melanjutkan ke ${pathname}.`);
+      await performTracking(req);
       return response;
     }
   } catch (error) {
@@ -137,34 +170,5 @@ export async function middleware(req) {
         "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
       }
     });
-  } finally {
-    (async () => {
-      try {
-        const currentUrl = new URL(req.url);
-        const currentPathname = currentUrl.pathname;
-        const baseURL = ensureProtocol(DOMAIN_URL, DEFAULT_PROTOCOL);
-        const isApiRoute = currentPathname.startsWith("/api");
-        const isVisitorApi = currentPathname.includes("/api/visitor");
-        const isAuthApi = currentPathname.includes("/api/auth");
-        const isGeneralApi = currentPathname.includes("/api/general");
-        const isAuthPage = currentPathname === "/login" || currentPathname === "/register";
-        if (isApiRoute && !isVisitorApi && !isAuthApi && !isGeneralApi) {
-          console.log(`[Middleware] Mengirim data permintaan API untuk tracking: ${currentPathname}`);
-          await axiosInstance.get(`${baseURL}/api/visitor/req`);
-        } else if (!isApiRoute && !isAuthPage) {
-          console.log(`[Middleware] Mengirim data kunjungan halaman untuk tracking: ${currentPathname}`);
-          await axiosInstance.get(`${baseURL}/api/visitor/visit`);
-          await axiosInstance.post(`${baseURL}/api/visitor/info`, {
-            route: currentPathname,
-            time: new Date().toISOString(),
-            hit: 1
-          });
-        }
-      } catch (err) {
-        const errorMessage = err.response ? `Status ${err.response.status}: ${err.response.data?.message || err.message}` : err.message;
-        console.error(`[Middleware] Gagal mencatat pengunjung untuk ${pathname}: ${errorMessage}`);
-      }
-    })();
   }
-  return response;
 }

@@ -1,13 +1,15 @@
 const withPWA = require("@ducanh2912/next-pwa").default({
   dest: "public",
+  register: true,
+  skipWaiting: true,
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
   swcMinify: true,
   disable: false,
   workboxOptions: {
-    disableDevLogs: true,
-  },
+    disableDevLogs: true
+  }
 });
 const {
   createSecureHeaders
@@ -27,6 +29,7 @@ const nextConfig = withPWA({
   reactStrictMode: true,
   experimental: {
     appDir: true,
+    swcMinify: true,
     serverActions: {
       bodySizeLimit: "5gb"
     },

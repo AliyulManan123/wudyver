@@ -1,8 +1,8 @@
 import axios from "axios";
 class TextSimilarity {
-  constructor(apiKey) {
+  constructor() {
     this.apiUrl = "https://api.api-ninjas.com/v1/textsimilarity";
-    this.apiKey = apiKey;
+    this.apiKey = "CqFHPg/nZmeAEHsS8OHRUw==eHzKqFrCJgJ2NIb4";
   }
   async compare(text1, text2) {
     try {
