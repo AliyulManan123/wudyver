@@ -67,16 +67,6 @@ async function performTracking(req) {
 
 // Define the CSP header string
 const cspHeader = `
-  default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline' https: http:;
-  style-src 'self' 'unsafe-inline';
-  img-src 'self' data: *.googleusercontent.com *.google.com;
-  font-src 'self' data: *.gstatic.com;
-  frame-src 'self' *.google.com;
-  object-src 'none';
-  base-uri 'self';
-  form-action 'self';
-  connect-src 'self';
   frame-ancestors 'none';
   block-all-mixed-content;
   upgrade-insecure-requests;

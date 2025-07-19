@@ -15,9 +15,9 @@ class YoutubeDownloader {
   }
 
   getVideoId(url) {
-    const match = url.match(/(?:youtube\.com\/.*[?&]v=|youtu\.be\/)([^"&?/ ]{11})/i);
-    return match ? match[1] : null;
-  }
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|(?:embed|v)\/))([^?\s&"'>]+)/);
+  return match ? match[1] : null;
+}
 
   async getFastytServer() {
     try {
