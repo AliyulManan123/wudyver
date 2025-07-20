@@ -1,31 +1,42 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Cookies from "js-cookie";
 import { ToastContainer, toast } from "react-toastify";
 import { Icon } from "@iconify/react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const CustomCookieConsent = () => {
   const [visible, setVisible] = useState(false);
-  const cookieName = "wudysoft_cookie_consent";
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
-    const consent = Cookies.get(cookieName);
-    if (!consent) {
-      setTimeout(() => setVisible(true), 1000); // delay tampil 1s
+    if (status === "loading") {
+      setVisible(false);
+      return;
     }
-  }, []);
+
+    if (status === "authenticated") {
+      setVisible(false);
+      return;
+    }
+
+    if (status === "unauthenticated") {
+      setTimeout(() => setVisible(true), 1000);
+    }
+  }, [status]);
 
   const acceptCookie = () => {
-    Cookies.set(cookieName, "true", { expires: 365 });
     toast.success("Anda menyetujui penggunaan cookie.");
     setVisible(false);
+    router.push('/');
   };
 
   const declineCookie = () => {
-    Cookies.set(cookieName, "false", { expires: 365 });
     toast.info("Anda menolak penggunaan cookie non-esensial.");
     setVisible(false);
+    router.push('/login');
   };
 
   if (!visible) return null;
@@ -48,17 +59,29 @@ const CustomCookieConsent = () => {
 
       <div className="fixed inset-0 z-[9998] bg-slate-900/50 backdrop-blur-sm" />
 
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[9999] w-full max-w-4xl px-4">
+      <div className="fixed inset-1/2 -translate-x-1/2 -translate-y-1/2 z-[9999] w-full max-w-4xl px-4">
         <div className="border border-teal-500/50 dark:border-teal-600/70 rounded-xl shadow-lg bg-white text-slate-800 dark:bg-slate-800/50 dark:text-slate-100 backdrop-blur-sm bg-opacity-80 dark:bg-opacity-80 p-4 sm:p-6">
           <div className="flex items-start space-x-3">
-            <Icon icon="ph:cookie-duotone" className="text-3xl text-teal-500 flex-shrink-0" />
+            <Icon icon="ph:cookie-duotone" className="text-4xl text-teal-500 flex-shrink-0" />
             <div className="flex-1 space-y-2">
-              <h2 className="font-semibold text-lg text-teal-600 dark:text-teal-300">Persetujuan Cookie</h2>
+              <h2 className="font-bold text-xl text-teal-600 dark:text-teal-300">Penggunaan Cookie di Situs Kami</h2>
               <p className="text-sm sm:text-base">
                 Situs ini menggunakan cookie untuk meningkatkan pengalaman Anda. Cookie esensial diperlukan untuk fungsi dasar situs. Cookie non-esensial digunakan untuk analitik dan personalisasi.
                 <br />
                 Apakah Anda menyetujui penggunaan semua cookie?
               </p>
+              {status === "loading" && <p className="text-xs text-slate-500 dark:text-slate-400">Memuat sesi...</p>}
+              {session && (
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Sesi pengguna: {session.user.email} (Status: {status})
+                </p>
+              )}
+              {!session && status === "unauthenticated" && (
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Anda belum login. Untuk melanjutkan, harap setujui penggunaan cookie.
+                </p>
+              )}
+
               <div className="mt-4 flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={acceptCookie}
