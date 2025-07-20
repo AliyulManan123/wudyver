@@ -57,10 +57,12 @@ const CustomCookieConsent = () => {
         }
       />
 
+      {/* Overlay background */}
       <div className="fixed inset-0 z-[9998] bg-slate-900/50 backdrop-blur-sm" />
 
-      <div className="fixed inset-1/2 -translate-x-1/2 -translate-y-1/2 z-[9999] w-full max-w-4xl px-4">
-        <div className="border border-teal-500/50 dark:border-teal-600/70 rounded-xl shadow-lg bg-white text-slate-800 dark:bg-slate-800/50 dark:text-slate-100 backdrop-blur-sm bg-opacity-80 dark:bg-opacity-80 p-4 sm:p-6">
+      {/* Cookie consent box centered */}
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
+        <div className="w-full max-w-4xl border border-teal-500/50 dark:border-teal-600/70 rounded-xl shadow-lg bg-white text-slate-800 dark:bg-slate-800/50 dark:text-slate-100 backdrop-blur-sm bg-opacity-80 dark:bg-opacity-80 p-4 sm:p-6">
           <div className="flex items-start space-x-3">
             <Icon icon="ph:cookie-duotone" className="text-4xl text-teal-500 flex-shrink-0" />
             <div className="flex-1 space-y-2">
@@ -70,6 +72,7 @@ const CustomCookieConsent = () => {
                 <br />
                 Apakah Anda menyetujui penggunaan semua cookie?
               </p>
+
               {status === "loading" && <p className="text-xs text-slate-500 dark:text-slate-400">Memuat sesi...</p>}
               {session && (
                 <p className="text-xs text-slate-500 dark:text-slate-400">

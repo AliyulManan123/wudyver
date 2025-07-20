@@ -107,7 +107,7 @@ class EasyTubeDownloader {
 
       console.log(`[Download] Preparing ${finalFormat} for ${videoId}`);
 
-      while (!downloadLink && attempts < 20) {
+      while (!downloadLink && attempts < 60) {
         const res = await this.client.post(
           `${this.baseUrl}/download`,
           new URLSearchParams({ id: videoId, format: finalFormat }),
@@ -125,7 +125,7 @@ class EasyTubeDownloader {
           console.log(`[Download] Link Ready: ${downloadLink}`);
         } else {
           console.log(`[Polling] Waiting... (${++attempts})`);
-          await this.sleep(2000);
+          await this.sleep(3000);
         }
       }
 

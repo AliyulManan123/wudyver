@@ -117,7 +117,7 @@
     "uuid": "latest",
     "ws": "latest",
     "xml2js": "latest",
-    "busboy": "latest"
+    "formidable": "latest"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",

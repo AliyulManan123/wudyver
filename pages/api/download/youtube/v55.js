@@ -70,7 +70,7 @@ class YoutubeDownloader {
     });
   }
 
-  async download({ url, quality = '360p', convert = false }) {
+  async download({ url, quality = '360p', convert = true }) {
     try {
       console.log('[START] Proses download:', url);
       const videoId = this.getVideoId(url);
