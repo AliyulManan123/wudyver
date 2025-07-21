@@ -1,122 +1,218 @@
 import axios from "axios";
-import crypto from "crypto";
-class SaveTubeAPI {
+import CryptoJS from "crypto-js";
+class SavetubeDownloader {
   constructor() {
-    this.baseURL = "https://media.savetube.me/api";
-    this.secretKey = "C5D58EF67A7584E4A29F6C35BBC4EB12";
-    this.headers = {
-      Accept: "*/*",
-      "Accept-Language": "id-ID,id;q=0.9",
-      Connection: "keep-alive",
-      Origin: "https://yt.savetube.me",
-      Referer: "https://yt.savetube.me/",
-      "Sec-Fetch-Dest": "empty",
-      "Sec-Fetch-Mode": "cors",
-      "Sec-Fetch-Site": "same-site",
-      "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36",
-      "sec-ch-ua": '"Chromium";v="131", "Not_A Brand";v="24", "Microsoft Edge Simulate";v="131", "Lemur";v="131"',
-      "sec-ch-ua-mobile": "?1",
-      "sec-ch-ua-platform": '"Android"'
-    };
+    this.cryptoKey = "C5D58EF67A7584E4A29F6C35BBC4EB12";
   }
-  async setCdnURL() {
+  async getRandomCdn() {
     try {
-      const response = await this.getRandomCDN();
+      const {
+        data
+      } = await axios.get("https://media.savetube.me/api/random-cdn");
+      console.log("[CDN]", data.cdn);
+      return data.cdn;
+    } catch (error) {
+      console.error("Failed to get CDN:", error.message);
+      throw new Error("Unable to get CDN endpoint");
+    }
+  }
+  formatInput(input) {
+    try {
+      const cleanInput = input.replace(/\s/g, "");
+      const rawData = Buffer.from(cleanInput, "base64");
+      const iv = rawData.slice(0, 16);
+      const encrypted = rawData.slice(16);
       return {
-        info: `https://${response.cdn}/v2/info`,
-        download: `https://${response.cdn}/download`
+        iv: iv,
+        encrypted: encrypted
       };
     } catch (error) {
-      console.error("Error setting CDN URL:", error);
-      throw new Error("Failed to set CDN URL");
+      throw new Error(`Input format error: ${error.message}`);
     }
   }
-  decryptData(encryptedData) {
+  decryptData(encryptedBase64) {
     try {
-      const decipher = crypto.createDecipheriv("aes-128-cbc", Buffer.from(this.secretKey, "hex"), Buffer.alloc(16, 0));
-      let decrypted = decipher.update(encryptedData, "base64", "utf8") + decipher.final("utf8");
-      const jsonData = decrypted.slice(decrypted.indexOf("{"), decrypted.lastIndexOf("}") + 1);
-      return JSON.parse(jsonData);
-    } catch (error) {
-      console.error("Error decrypting data:", error);
-      throw new Error("Failed to decrypt data");
-    }
-  }
-  async getRandomCDN() {
-    try {
-      const response = await axios.get(`${this.baseURL}/random-cdn`, {
-        headers: this.headers
+      const {
+        iv,
+        encrypted
+      } = this.formatInput(encryptedBase64);
+      const key = CryptoJS.enc.Hex.parse(this.cryptoKey);
+      const ivWordArray = CryptoJS.lib.WordArray.create(iv);
+      const encryptedWordArray = CryptoJS.lib.WordArray.create(encrypted);
+      const decrypted = CryptoJS.AES.decrypt({
+        ciphertext: encryptedWordArray
+      }, key, {
+        iv: ivWordArray,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
       });
-      return response.data;
+      const decryptedText = decrypted.toString(CryptoJS.enc.Utf8);
+      return JSON.parse(decryptedText);
     } catch (error) {
-      console.error("Error fetching random CDN:", error);
-      throw new Error("Failed to fetch CDN");
+      console.error("Decryption failed:", error.message);
+      throw error;
     }
   }
-  async getInfo(url, type = "video", quality = "360") {
+  async fetchVideoInfo(url) {
     try {
-      const cdnURL = await this.setCdnURL();
-      const response = await axios.post(cdnURL.info, {
+      const cdn = await this.getRandomCdn();
+      const {
+        data
+      } = await axios.post(`https://${cdn}/v2/info`, {
         url: url
-      }, {
-        headers: {
-          ...this.headers,
-          "Content-Type": "application/json"
-        }
       });
-      if (response.data?.data) {
-        const info = this.decryptData(response.data.data);
-        const downloadData = await this.getDownload(cdnURL, type, quality, info);
+      if (!data.status) {
+        console.warn("Fetch video info failed:", data.message);
         return {
-          ...info,
-          ...downloadData
+          status: false,
+          data: null,
+          message: data.message || "Failed to fetch video info"
         };
       }
-      return null;
+      const decrypted = this.decryptData(data.data);
+      console.log("[Video Info Fetched]", decrypted.title);
+      return {
+        status: true,
+        data: decrypted,
+        message: ""
+      };
     } catch (error) {
-      console.error("Error fetching video info:", error);
-      throw new Error("Failed to fetch video info");
+      console.error("Error in fetchVideoInfo:", error.message);
+      return {
+        status: false,
+        data: null,
+        message: "Fetch failed"
+      };
     }
   }
-  async getDownload(cdnURL, type, quality, {
-    key = "",
-    captchaToken = ""
+  async fetchDownloadUrl(videoKey, quality, type, directUrl = null, titleSlug = "") {
+    try {
+      const cdn = await this.getRandomCdn();
+      if (directUrl && type !== "audio") {
+        const result = {
+          status: true,
+          data: {
+            downloadUrl: `${directUrl}&title=${titleSlug}-ytshorts.savetube.me`
+          },
+          message: ""
+        };
+        console.log("[Direct Download URL]", result.data.downloadUrl);
+        return result;
+      }
+      const {
+        data
+      } = await axios.post(`https://${cdn}/download`, {
+        downloadType: type === "audio" || quality === "128" ? "audio" : "video",
+        quality: quality,
+        key: videoKey
+      });
+      console.log("[Download Fetched]", data.data?.downloadUrl);
+      return data;
+    } catch (error) {
+      console.error("Error fetching download URL:", error.message);
+      return {
+        status: false,
+        message: "Download failed",
+        data: null
+      };
+    }
+  }
+  async download({
+    url,
+    quality = "360",
+    type = "video"
   }) {
     try {
-      const response = await axios.post(cdnURL.download, {
-        downloadType: type,
-        quality: quality,
-        key: key,
-        captchaToken: captchaToken
-      }, {
-        headers: {
-          ...this.headers,
-          "Content-Type": "application/json"
+      const info = await this.fetchVideoInfo(url);
+      if (!info.status) return info;
+      const data = info.data;
+      let formats = [];
+      let directUrl = null;
+      if (type === "video") {
+        formats = data.video_formats || [];
+        directUrl = formats.find(f => String(f.height) === String(quality))?.url;
+      } else if (type === "audio") {
+        formats = data.audio_formats || [];
+        directUrl = formats.find(f => String(f.quality) === String(quality))?.url;
+      } else {
+        return {
+          status: false,
+          message: 'Invalid type. Use "video" or "audio".',
+          data: null
+        };
+      }
+      if (!directUrl) {
+        console.warn("Requested quality not found, returning available formats.");
+        return {
+          status: false,
+          message: `Quality "${quality}" not found. Available ${type} formats listed.`,
+          data: {
+            title: data.title,
+            thumbnail: data.thumbnail,
+            duration: data.durationLabel,
+            availableFormats: formats
+          }
+        };
+      }
+      const result = await this.fetchDownloadUrl(data.key, quality, type, directUrl, data.titleSlug);
+      return {
+        status: result.status,
+        message: result.message,
+        data: {
+          videoInfo: data,
+          downloadUrl: result.data?.downloadUrl,
+          ...result.data
         }
-      });
-      return response.data?.data || null;
+      };
     } catch (error) {
-      console.error("Error fetching download:", error);
-      throw new Error("Failed to fetch download link");
+      console.error("Error in download:", error.message);
+      return {
+        status: false,
+        data: null,
+        message: "Unexpected error occurred"
+      };
+    }
+  }
+  async getAvailableFormats(url) {
+    try {
+      const info = await this.fetchVideoInfo(url);
+      if (!info.status) return info;
+      const data = info.data;
+      return {
+        status: true,
+        message: "",
+        data: {
+          title: data.title,
+          thumbnail: data.thumbnail,
+          duration: data.durationLabel,
+          videoFormats: data.video_formats || [],
+          audioFormats: data.audio_formats || []
+        }
+      };
+    } catch (error) {
+      console.error("Error getting formats:", error.message);
+      return {
+        status: false,
+        data: null,
+        message: "Failed to get formats"
+      };
     }
   }
 }
 export default async function handler(req, res) {
-  try {
-    const {
-      url,
-      type,
-      quality
-    } = req.method === "GET" ? req.query : req.body;
-    if (!url) return res.status(400).json({
-      error: "No URL"
+  const params = req.method === "GET" ? req.query : req.body;
+  if (!params.url) {
+    return res.status(400).json({
+      error: "Url are required"
     });
-    const downloader = new SaveTubeAPI();
-    const result = await downloader.getInfo(url, type, quality);
-    return res.status(200).json(result);
+  }
+  try {
+    const downloader = new SavetubeDownloader();
+    const response = await downloader.download(params);
+    return res.status(200).json(response);
   } catch (error) {
     res.status(500).json({
-      error: error.message
+      error: error.message || "Internal Server Error"
     });
   }
 }

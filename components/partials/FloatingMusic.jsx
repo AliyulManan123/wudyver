@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Icon } from '@iconify/react';
 import { useRouter } from 'next/navigation';
 import YouTube from 'react-youtube';
+import { ToastContainer, toast } from 'react-toastify';
 import apiConfig from "@/configs/apiConfig";
 
 const FloatingMusicWidget = () => {
@@ -16,8 +17,6 @@ const FloatingMusicWidget = () => {
     const [currentSong, setCurrentSong] = useState(null);
     const [duration, setDuration] = useState(0);
     const [currentTime, setCurrentTime] = useState(0);
-    const [toastMessage, setToastMessage] = useState('');
-    const [toastType, setToastType] = useState('info');
     const [playerKey, setPlayerKey] = useState(0);
     const [playlist, setPlaylist] = useState([]);
     const [currentSongIndex, setCurrentSongIndex] = useState(-1);
@@ -43,9 +42,19 @@ const FloatingMusicWidget = () => {
     }, [isOpen]);
 
     const showToast = (message, type = 'info') => {
-        setToastMessage(message);
-        setToastType(type);
-        setTimeout(() => setToastMessage(''), 3000);
+        switch (type) {
+            case 'success':
+                toast.success(message);
+                break;
+            case 'error':
+                toast.error(message);
+                break;
+            case 'warn':
+                toast.warning(message);
+                break;
+            default:
+                toast.info(message);
+        }
     };
 
     const searchYouTube = async () => {
@@ -177,7 +186,7 @@ const FloatingMusicWidget = () => {
             },
         };
 
-        return playerType === 'audio' 
+        return playerType === 'audio'
             ? { ...baseOpts, height: '0', width: '0' }
             : { ...baseOpts, height: '200', width: '100%' };
     };
@@ -235,33 +244,42 @@ const FloatingMusicWidget = () => {
 
     return (
         <>
-            {toastMessage && (
-                <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg text-white text-sm max-w-sm ${
-                    toastType === 'success' ? 'bg-emerald-500' :
-                    toastType === 'error' ? 'bg-red-500' :
-                    toastType === 'warn' ? 'bg-yellow-500' : 'bg-sky-500'
-                }`}>
-                    {toastMessage}
-                </div>
-            )}
+            <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                newestOnTop
+                theme="colored"
+                toastClassName={(options) =>
+                    `relative flex p-1 min-h-10 rounded-md justify-between overflow-hidden cursor-pointer
+                    ${
+                        options?.type === "success"
+                            ? "bg-emerald-500 text-white"
+                            : options?.type === "error"
+                            ? "bg-red-500 text-white"
+                            : options?.type === "warn"
+                            ? "bg-yellow-500 text-white"
+                            : "bg-sky-500 text-white"
+                    } dark:text-slate-100 text-sm p-3 m-2 rounded-lg shadow-md`
+                }
+            />
 
             {!isOpen && (
                 <div className="fixed right-0 z-50 transition-all duration-300" style={{ top: 'calc(100vh / 12 * 2.5)' }}>
                     <div className="flex flex-col space-y-2">
                         <div
-                            className="relative w-10 h-10 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-l-xl shadow-xl flex items-center justify-center hover:scale-105 transition-transform border-l-2 border-t-2 border-b-2 border-teal-300 cursor-pointer"
+                            className="relative w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-l-xl shadow-xl flex items-center justify-center hover:scale-105 transition-transform border-l-2 border-t-2 border-b-2 border-teal-300 cursor-pointer"
                             onClick={() => setIsOpen(true)}
                         >
-                            <Icon icon="mdi:music" className="text-xl text-white" />
+                            <Icon icon="mdi:music" className="text-lg sm:text-xl text-white" />
                             {(isPlaying || currentSong) && (
                                 <div className="absolute -top-1 -left-1 w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
                             )}
                         </div>
                         <div
-                            className="relative w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-l-xl shadow-xl flex items-center justify-center hover:scale-105 transition-transform border-l-2 border-t-2 border-b-2 border-blue-300 cursor-pointer"
+                            className="relative w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-l-xl shadow-xl flex items-center justify-center hover:scale-105 transition-transform border-l-2 border-t-2 border-b-2 border-blue-300 cursor-pointer"
                             onClick={() => router.push('/try-it')}
                         >
-                            <Icon icon="mdi:play-circle" className="text-xl text-white" />
+                            <Icon icon="mdi:play-circle" className="text-lg sm:text-xl text-white" />
                         </div>
                     </div>
                 </div>
@@ -270,197 +288,207 @@ const FloatingMusicWidget = () => {
             {isOpen && (
                 <div
                     ref={openCardRef}
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+                    className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50 backdrop-blur-sm"
                     onClick={(e) => {
                         if (openCardRef.current === e.target) {
                             setIsOpen(false);
                         }
                     }}
                 >
-                    <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-teal-500/30 dark:border-teal-600/50 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
-                        <div className="p-4 border-b border-slate-200 dark:border-slate-700/60">
+                    <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-teal-500/30 dark:border-teal-600/50 w-full max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-4xl mx-2 sm:mx-4 h-full max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
+                        <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-700/60 flex-shrink-0">
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-3">
-                                    <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center">
-                                        <Icon icon="mdi:music" className="text-lg text-white" />
+                                <div className="flex items-center space-x-2 sm:space-x-3">
+                                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center">
+                                        <Icon icon="mdi:music" className="text-sm sm:text-lg text-white" />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-slate-800 dark:text-slate-100">Music Player</h3>
+                                        <h3 className="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100">Music Player</h3>
                                         <p className="text-xs text-slate-500 dark:text-slate-400">YouTube Music</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center space-x-3">
+                                <div className="flex items-center space-x-2 sm:space-x-3">
                                     <div className="flex bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
                                         <button
                                             onClick={() => setPlayerType('audio')}
-                                            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors flex items-center space-x-1 ${
+                                            className={`px-2 sm:px-3 py-1 rounded-md text-xs font-medium transition-colors flex items-center space-x-1 ${
                                                 playerType === 'audio'
                                                     ? 'bg-white dark:bg-slate-600 text-teal-600 dark:text-teal-400'
                                                     : 'text-slate-600 dark:text-slate-400'
                                             }`}
                                         >
                                             <Icon icon="mdi:music" className="w-3 h-3" />
-                                            <span>Audio</span>
+                                            <span className="hidden sm:inline">Audio</span>
                                         </button>
                                         <button
                                             onClick={() => setPlayerType('video')}
-                                            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors flex items-center space-x-1 ${
+                                            className={`px-2 sm:px-3 py-1 rounded-md text-xs font-medium transition-colors flex items-center space-x-1 ${
                                                 playerType === 'video'
                                                     ? 'bg-white dark:bg-slate-600 text-teal-600 dark:text-teal-400'
                                                     : 'text-slate-600 dark:text-slate-400'
                                             }`}
                                         >
                                             <Icon icon="mdi:video" className="w-3 h-3" />
-                                            <span>Video</span>
+                                            <span className="hidden sm:inline">Video</span>
                                         </button>
                                     </div>
                                     <button
                                         onClick={() => setIsOpen(false)}
-                                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
+                                        className="p-1.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
                                     >
-                                        <Icon icon="mdi:close" className="text-xl text-slate-600 dark:text-slate-400" />
+                                        <Icon icon="mdi:close" className="text-lg sm:text-xl text-slate-600 dark:text-slate-400" />
                                     </button>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="p-4 space-y-4">
-                            <div className="flex space-x-2">
-                                <input
-                                    type="text"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="Cari lagu atau artis..."
-                                    className="flex-1 px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-slate-200"
-                                    onKeyPress={(e) => e.key === 'Enter' && searchYouTube()}
-                                />
-                                <button
-                                    onClick={searchYouTube}
-                                    disabled={isSearching}
-                                    className="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg text-sm font-medium disabled:opacity-50"
-                                >
-                                    {isSearching ? 'Cari...' : 'Cari'}
-                                </button>
-                            </div>
+                        <div className="flex-1 overflow-y-auto overscroll-contain">
+                            <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+                                <div className="flex space-x-2">
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder="Cari lagu atau artis..."
+                                        className="flex-1 px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-slate-200"
+                                        onKeyPress={(e) => e.key === 'Enter' && searchYouTube()}
+                                    />
+                                    <button
+                                        onClick={searchYouTube}
+                                        disabled={isSearching}
+                                        className="px-3 sm:px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 flex-shrink-0"
+                                    >
+                                        {isSearching ? (
+                                            <Icon icon="mdi:loading" className="animate-spin text-lg" />
+                                        ) : (
+                                            <span className="hidden sm:inline">Cari</span>
+                                        )}
+                                        {isSearching && <span className="sm:hidden">...</span>}
+                                        {!isSearching && <Icon icon="mdi:magnify" className="sm:hidden text-lg" />}
+                                    </button>
+                                </div>
 
-                            {searchResults.length > 0 && (
-                                <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
-                                    {searchResults.map((item, index) => (
-                                        <div
-                                            key={index}
-                                            onClick={() => selectSearchResult(item)}
-                                            className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer transition-colors ${
-                                                currentSong?.id === item.id
-                                                    ? 'bg-teal-100 dark:bg-teal-900/30 border border-teal-300 dark:border-teal-600'
-                                                    : 'bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600'
-                                            }`}
-                                        >
+                                {searchResults.length > 0 && (
+                                    <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto overscroll-contain pr-1 sm:pr-2">
+                                        {searchResults.map((item, index) => (
+                                            <div
+                                                key={index}
+                                                onClick={() => selectSearchResult(item)}
+                                                className={`flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 rounded-lg cursor-pointer transition-colors ${
+                                                    currentSong?.id === item.id
+                                                        ? 'bg-teal-100 dark:bg-teal-900/30 border border-teal-300 dark:border-teal-600'
+                                                        : 'bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600'
+                                                }`}
+                                            >
+                                                <img
+                                                    src={item.thumbnail}
+                                                    alt={item.title}
+                                                    className="w-10 h-8 sm:w-12 sm:h-9 rounded object-cover flex-shrink-0"
+                                                />
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className="text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
+                                                        {item.title}
+                                                    </h4>
+                                                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                                        {item.creator} • {item.duration}
+                                                    </p>
+                                                </div>
+                                                {currentSong?.id === item.id && (
+                                                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isPlaying ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}></div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {currentSong && (
+                                    <div className="bg-teal-50 dark:bg-teal-900/20 p-3 sm:p-4 rounded-lg space-y-3 sm:space-y-4">
+                                        <div className="flex items-center space-x-2 sm:space-x-3">
                                             <img
-                                                src={item.thumbnail}
-                                                alt={item.title}
-                                                className="w-12 h-9 rounded object-cover"
+                                                src={currentSong.thumbnail}
+                                                alt={currentSong.title}
+                                                className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
                                             />
                                             <div className="flex-1 min-w-0">
-                                                <h4 className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
-                                                    {item.title}
-                                                </h4>
-                                                <p className="text-xs text-slate-500 dark:text-slate-400">
-                                                    {item.creator} • {item.duration}
-                                                </p>
+                                                <div className="text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
+                                                    {currentSong.title}
+                                                </div>
+                                                <div className="text-xs text-slate-600 dark:text-slate-400 mt-1 truncate">
+                                                    {currentSong.creator}
+                                                </div>
                                             </div>
-                                            {currentSong?.id === item.id && (
-                                                <div className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}></div>
-                                            )}
+                                            <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${isPlaying ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}></div>
                                         </div>
-                                    ))}
-                                </div>
-                            )}
 
-                            {currentSong && (
-                                <div className="bg-teal-50 dark:bg-teal-900/20 p-3 rounded-lg">
-                                    <div className="flex items-center space-x-3">
-                                        <img
-                                            src={currentSong.thumbnail}
-                                            alt={currentSong.title}
-                                            className="w-12 h-12 rounded object-cover"
-                                        />
-                                        <div className="flex-1 min-w-0">
-                                            <div className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
-                                                {currentSong.title}
+                                        {playerType === 'video' && (
+                                            <div className="rounded-lg overflow-hidden">
+                                                <YouTube
+                                                    key={playerKey}
+                                                    videoId={currentSong.id}
+                                                    opts={getPlayerOpts()}
+                                                    onReady={onPlayerReady}
+                                                    onStateChange={onPlayerStateChange}
+                                                    onError={onPlayerError}
+                                                    className="w-full"
+                                                />
                                             </div>
-                                            <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                                                {currentSong.creator}
-                                            </div>
-                                        </div>
-                                        <div className={`w-3 h-3 rounded-full ${isPlaying ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}></div>
-                                    </div>
+                                        )}
 
-                                    {playerType === 'video' && (
-                                        <div className="mt-3">
-                                            <YouTube
-                                                key={playerKey}
-                                                videoId={currentSong.id}
-                                                opts={getPlayerOpts()}
-                                                onReady={onPlayerReady}
-                                                onStateChange={onPlayerStateChange}
-                                                onError={onPlayerError}
-                                                className="w-full rounded-lg overflow-hidden"
+                                        {playerType === 'audio' && (
+                                            <div style={{ display: 'none' }}>
+                                                <YouTube
+                                                    key={playerKey}
+                                                    videoId={currentSong.id}
+                                                    opts={getPlayerOpts()}
+                                                    onReady={onPlayerReady}
+                                                    onStateChange={onPlayerStateChange}
+                                                    onError={onPlayerError}
+                                                />
+                                            </div>
+                                        )}
+
+                                        <div className="space-y-2">
+                                            <input
+                                                type="range"
+                                                min="0"
+                                                max={duration}
+                                                step="0.1"
+                                                value={currentTime}
+                                                onChange={handleSeekChange}
+                                                className="w-full h-2 rounded-full appearance-none bg-slate-300 dark:bg-slate-700 cursor-pointer"
+                                                style={{
+                                                    background: `linear-gradient(to right, #14b8a6 ${(currentTime / duration) * 100}%, #cbd5e1 ${(currentTime / duration) * 100}%)`
+                                                }}
                                             />
+                                            <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
+                                                <span>{formatTime(currentTime)}</span>
+                                                <span>{formatTime(duration)}</span>
+                                            </div>
                                         </div>
-                                    )}
-
-                                    {playerType === 'audio' && (
-                                        <div style={{ display: 'none' }}>
-                                            <YouTube
-                                                key={playerKey}
-                                                videoId={currentSong.id}
-                                                opts={getPlayerOpts()}
-                                                onReady={onPlayerReady}
-                                                onStateChange={onPlayerStateChange}
-                                                onError={onPlayerError}
-                                            />
-                                        </div>
-                                    )}
-
-                                    <div className="mt-4">
-                                        <input
-                                            type="range"
-                                            min="0"
-                                            max={duration}
-                                            step="0.1"
-                                            value={currentTime}
-                                            onChange={handleSeekChange}
-                                            className="w-full h-2 rounded-full appearance-none bg-slate-300 dark:bg-slate-700 cursor-pointer"
-                                            style={{ background: `linear-gradient(to right, #14b8a6 ${(currentTime / duration) * 100}%, #cbd5e1 ${(currentTime / duration) * 100}%)` }}
-                                        />
-                                        <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                            <span>{formatTime(currentTime)}</span>
-                                            <span>{formatTime(duration)}</span>
+                                        
+                                        <div className="flex justify-center items-center space-x-2 sm:space-x-4">
+                                            <button
+                                                onClick={playPreviousSong}
+                                                className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
+                                            >
+                                                <Icon icon="mdi:skip-previous" className="text-xl sm:text-2xl" />
+                                            </button>
+                                            <button
+                                                onClick={togglePlayPause}
+                                                className="p-2 sm:p-3 bg-teal-500 hover:bg-teal-600 text-white rounded-full transition-colors shadow-md"
+                                            >
+                                                <Icon icon={isPlaying ? "mdi:pause" : "mdi:play"} className="text-xl sm:text-2xl" />
+                                            </button>
+                                            <button
+                                                onClick={playNextSong}
+                                                className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
+                                            >
+                                                <Icon icon="mdi:skip-next" className="text-xl sm:text-2xl" />
+                                            </button>
                                         </div>
                                     </div>
-                                    
-                                    <div className="flex justify-center items-center mt-4 space-x-4">
-                                        <button
-                                            onClick={playPreviousSong}
-                                            className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
-                                        >
-                                            <Icon icon="mdi:skip-previous" className="text-2xl" />
-                                        </button>
-                                        <button
-                                            onClick={togglePlayPause}
-                                            className="p-3 bg-teal-500 hover:bg-teal-600 text-white rounded-full transition-colors shadow-md"
-                                        >
-                                            <Icon icon={isPlaying ? "mdi:pause" : "mdi:play"} className="text-2xl" />
-                                        </button>
-                                        <button
-                                            onClick={playNextSong}
-                                            className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
-                                        >
-                                            <Icon icon="mdi:skip-next" className="text-2xl" />
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

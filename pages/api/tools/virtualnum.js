@@ -1,5 +1,5 @@
-import * as cheerio from "cheerio";
 import axios from "axios";
+import * as cheerio from "cheerio";
 class smstome {
   async Country() {
     try {
@@ -7,14 +7,14 @@ class smstome {
         data
       } = await axios.get("https://smstome.com");
       const $ = cheerio.load(data);
-      return $(".column.fields ul li").map((_, listItem) => ({
-        title: $("a", listItem).text().trim(),
-        countryCode: $("a", listItem).attr("href").split("/").pop(),
-        countryFlag: "https://smstome.com" + $("img", listItem).attr("src"),
-        link: "https://smstome.com" + $("a", listItem).attr("href")
-      })).get().filter(entry => Object.values(entry).every(value => void 0 !== value && "" !== value));
-    } catch (error) {
-      console.error("Error fetching country page:", error);
+      return $(".column.fields ul li").map((_, li) => ({
+        title: $("a", li).text().trim(),
+        countryCode: $("a", li).attr("href")?.split("/").pop(),
+        countryFlag: "https://smstome.com" + $("img", li).attr("src"),
+        link: "https://smstome.com" + $("a", li).attr("href")
+      })).get().filter(x => Object.values(x).every(Boolean));
+    } catch (err) {
+      console.error("smstome.Country() error:", err.message);
       return [];
     }
   }
@@ -22,32 +22,32 @@ class smstome {
     try {
       const {
         data
-      } = await axios.get(`https://smstome.com/country/${country.toLowerCase()}`);
+      } = await axios.get(`https://smstome.com/country/${country}`);
       const $ = cheerio.load(data);
-      return $(".numview").map((_, numview) => ({
-        phoneNumber: $("a", numview).text().trim(),
-        location: $("div.row:nth-child(1) > div > small", numview).text().trim(),
-        addedDate: $("div.row:nth-child(2) > small", numview).text().trim(),
-        link: $("a", numview).attr("href")
-      })).get().filter(entry => Object.values(entry).every(value => void 0 !== value && "" !== value));
-    } catch (error) {
-      console.error("Error fetching number page:", error);
+      return $(".numview").map((_, el) => ({
+        phoneNumber: $("a", el).text().trim(),
+        location: $("div.row:nth-child(1) > div > small", el).text().trim(),
+        addedDate: $("div.row:nth-child(2) > small", el).text().trim(),
+        link: $("a", el).attr("href")
+      })).get().filter(x => Object.values(x).every(Boolean));
+    } catch (err) {
+      console.error(`smstome.getNumber(${country}) error:`, err.message);
       return [];
     }
   }
-  async getMessage(url, page) {
+  async getMessage(url, page = 1) {
     try {
       const {
         data
       } = await axios.get(page ? `${url}?page=${page}` : url);
       const $ = cheerio.load(data);
-      return $("table.messagesTable tbody tr").map((_, message) => ({
-        from: $("td:nth-child(1)", message).text().trim().replace("\x3c!--sse--\x3e", "").replace("\x3c!--/sse--\x3e", ""),
-        received: $("td:nth-child(2)", message).text().trim().replace("\x3c!--sse--\x3e", "").replace("\x3c!--/sse--\x3e", ""),
-        content: $("td:nth-child(3)", message).text().trim().replace("\x3c!--sse--\x3e", "").replace("\x3c!--/sse--\x3e", "")
-      })).get().filter(entry => Object.values(entry).every(value => void 0 !== value && "" !== value));
-    } catch (error) {
-      console.error("Error fetching message page:", error);
+      return $("table.messagesTable tbody tr").map((_, row) => ({
+        from: $("td:nth-child(1)", row).text().trim(),
+        received: $("td:nth-child(2)", row).text().trim(),
+        content: $("td:nth-child(3)", row).text().trim()
+      })).get().filter(x => Object.values(x).every(Boolean));
+    } catch (err) {
+      console.error(`smstome.getMessage(${url}) error:`, err.message);
       return [];
     }
   }
@@ -59,13 +59,13 @@ class sms24 {
         data
       } = await axios.get("https://sms24.me/en/countries");
       const $ = cheerio.load(data);
-      return $(".callout").map((_, callout) => ({
-        title: $("span.placeholder.h5", callout).text().trim(),
-        link: "https://sms24.me/en/countries/" + $("span.fi", callout).attr("data-flag"),
-        countryFlag: $("span.fi", callout).attr("data-flag")
+      return $(".callout").map((_, div) => ({
+        title: $("span.placeholder.h5", div).text().trim(),
+        link: "https://sms24.me/en/countries/" + $("span.fi", div).attr("data-flag"),
+        countryFlag: $("span.fi", div).attr("data-flag")
       })).get();
-    } catch (error) {
-      console.error("Error fetching country page:", error);
+    } catch (err) {
+      console.error("sms24.Country() error:", err.message);
       return [];
     }
   }
@@ -73,14 +73,14 @@ class sms24 {
     try {
       const {
         data
-      } = await axios.get(`https://sms24.me/en/countries/${country.toLowerCase()}`);
+      } = await axios.get(`https://sms24.me/en/countries/${country}`);
       const $ = cheerio.load(data);
-      return $(".callout").map((_, callout) => ({
-        phoneNumber: $(".fw-bold.text-primary", callout).text().trim(),
-        country: $("h5", callout).text().trim()
+      return $(".callout").map((_, el) => ({
+        phoneNumber: $(".fw-bold.text-primary", el).text().trim(),
+        country: $("h5", el).text().trim()
       })).get();
-    } catch (error) {
-      console.error("Error fetching number page:", error);
+    } catch (err) {
+      console.error(`sms24.getNumber(${country}) error:`, err.message);
       return [];
     }
   }
@@ -88,67 +88,112 @@ class sms24 {
     try {
       const {
         data
-      } = await axios.get(`https://sms24.me/en/numbers/${parseInt(number)}`);
+      } = await axios.get(`https://sms24.me/en/numbers/${number}`);
       const $ = cheerio.load(data);
-      return $(".shadow-sm.bg-light.rounded.border-start.border-info.border-5").map((_, message) => ({
-        from: $("a", message).text().trim().replace("From:", "").trim(),
-        content: $("span", message).text().trim()
+      return $(".shadow-sm.bg-light.rounded.border-start.border-info.border-5").map((_, el) => ({
+        from: $("a", el).text().replace("From:", "").trim(),
+        content: $("span", el).text().trim()
       })).get();
-    } catch (error) {
-      console.error("Error fetching message page:", error);
+    } catch (err) {
+      console.error(`sms24.getMessage(${number}) error:`, err.message);
       return [];
     }
   }
 }
 export default async function handler(req, res) {
   const {
-    method
+    method,
+    query,
+    body
   } = req;
-  const smstomeInstance = new smstome();
-  const sms24Instance = new sms24();
-  switch (method) {
-    case "GET":
-      const {
-        service,
-        action,
-        country,
-        number,
-        page
-      } = req.method === "GET" ? req.query : req.body;
-      if (service === "smstome") {
-        if (action === "country") {
-          const data = await smstomeInstance.Country();
-          return res.status(200).json(data);
+  const input = method === "GET" ? query : body;
+  const {
+    service,
+    action,
+    country,
+    number,
+    page
+  } = input;
+  const help = {
+    services: {
+      smstome: {
+        description: "Receive SMS from smstome.com",
+        actions: {
+          country: "List available countries",
+          number: "List phone numbers from a country (requires `country`)",
+          message: "List messages from a number URL (requires `number`, optional `page`)"
         }
-        if (action === "number" && country) {
-          const data = await smstomeInstance.getNumber(country);
-          return res.status(200).json(data);
-        }
-        if (action === "message" && number) {
-          const data = await smstomeInstance.getMessage(number, page);
-          return res.status(200).json(data);
-        }
-      }
-      if (service === "sms24") {
-        if (action === "country") {
-          const data = await sms24Instance.Country();
-          return res.status(200).json(data);
-        }
-        if (action === "number" && country) {
-          const data = await sms24Instance.getNumber(country);
-          return res.status(200).json(data);
-        }
-        if (action === "message" && number) {
-          const data = await sms24Instance.getMessage(number);
-          return res.status(200).json(data);
+      },
+      sms24: {
+        description: "Receive SMS from sms24.me",
+        actions: {
+          country: "List available countries",
+          number: "List phone numbers from a country (requires `country`)",
+          message: "List messages from number ID (requires `number`)"
         }
       }
-      return res.status(400).json({
-        error: "Invalid service or action"
-      });
-    default:
-      res.status(405).json({
-        error: `Method ${method} Not Allowed`
-      });
+    },
+    exampleUsage: [{
+      method: "GET",
+      url: "/api/tools/virtualnum?service=smstome&action=country"
+    }, {
+      method: "POST",
+      body: {
+        service: "sms24",
+        action: "number",
+        country: "indonesia"
+      }
+    }]
+  };
+  if (!service || !help.services[service]) {
+    return res.status(400).json({
+      error: "Invalid or missing `service`.",
+      availableServices: Object.keys(help.services),
+      exampleUsage: help.exampleUsage
+    });
+  }
+  if (!action || !help.services[service].actions[action]) {
+    return res.status(400).json({
+      error: "Invalid or missing `action`.",
+      availableActions: help.services[service].actions,
+      exampleUsage: help.exampleUsage
+    });
+  }
+  const instance = service === "smstome" ? new smstome() : new sms24();
+  try {
+    switch (action) {
+      case "country": {
+        const data = await instance.Country();
+        return res.status(200).json(data);
+      }
+      case "number": {
+        if (!country) {
+          return res.status(400).json({
+            error: "Missing `country` parameter."
+          });
+        }
+        const data = await instance.getNumber(country.toLowerCase());
+        return res.status(200).json(data);
+      }
+      case "message": {
+        if (!number) {
+          return res.status(400).json({
+            error: "Missing `number` parameter."
+          });
+        }
+        const data = await instance.getMessage(number, page);
+        return res.status(200).json(data);
+      }
+      default:
+        return res.status(400).json({
+          error: "Unknown action.",
+          availableActions: help.services[service].actions
+        });
+    }
+  } catch (err) {
+    console.error("API error:", err.message);
+    return res.status(500).json({
+      error: "Internal Server Error"
+    });
   }
 }

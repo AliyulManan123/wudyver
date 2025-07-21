@@ -16,8 +16,10 @@ import * as cheerio from "cheerio";
 import ora from "ora";
 import chalk from "chalk";
 import _ from "lodash";
-import formidable from 'formidable';
-import fs from 'fs/promises';
+import formidable from "formidable";
+import {
+  promises as fs
+} from "fs";
 const referer = "https://krakenfiles.com";
 const uloadUrlRegexStr = /url: "([^"]+)"/;
 const generateSlug = crypto.createHash("md5").update(`${Date.now()}-${uuidv4()}`).digest("hex").substring(0, 8);
@@ -950,40 +952,38 @@ class Uploader {
     }
   }
 }
-
-
 export const config = {
   api: {
-    bodyParser: false,
-  },
+    bodyParser: false
+  }
 };
-
 const formidableConfig = {
   keepExtensions: true,
-  maxFileSize: 10_000_000,
-  maxFieldsSize: 10_000_000,
-  maxFields: 2,
-  allowEmptyFiles: false,
-  multiples: false,
+  maxFileSize: 1e7,
+  maxFieldsSize: 1e7,
+  maxFields: 10,
+  allowEmptyFiles: true,
+  multiples: true
 };
-
-async function parseFormidable(req) {
+async function parseForm(req) {
   return new Promise((resolve, reject) => {
     const form = formidable(formidableConfig);
     form.parse(req, async (err, fields, files) => {
       if (err) return reject(err);
-
       const file = files.file;
-      if (!file) return resolve({ fileBuffer: null, fileName: null, fields });
-
+      if (!file) return resolve({
+        buffer: null,
+        fileName: null,
+        fields: fields
+      });
       const uploadedFile = Array.isArray(file) ? file[0] : file;
       try {
-        const fileBuffer = await fs.readFile(uploadedFile.filepath);
-        await fs.unlink(uploadedFile.filepath); // optional: hapus file temp
+        const buffer = await fs.readFile(uploadedFile.filepath);
+        await fs.unlink(uploadedFile.filepath);
         resolve({
-          fileBuffer,
-          fileName: uploadedFile.originalFilename || 'unknown_file',
-          fields,
+          buffer: buffer,
+          fileName: uploadedFile.originalFilename || "unknown_file",
+          fields: fields
         });
       } catch (err) {
         reject(err);
@@ -991,87 +991,114 @@ async function parseFormidable(req) {
     });
   });
 }
-
 export default async function handler(req, res) {
-  if (!['GET', 'POST'].includes(req.method)) {
-    return res.status(405).json({ error: `Metode ${req.method} tidak diizinkan` });
+  if (!["GET", "POST"].includes(req.method)) {
+    return res.status(405).json({
+      error: `Metode ${req.method} tidak diizinkan`
+    });
   }
-
-  if (req.method === 'GET') {
+  if (req.method === "GET") {
     const uploader = new Uploader();
-    const availableHosts = Object.getOwnPropertyNames(Object.getPrototypeOf(uploader))
-      .filter(prop => typeof uploader[prop] === 'function' && prop !== 'constructor');
-    return res.status(200).json({ hosts: availableHosts });
+    const availableHosts = Object.getOwnPropertyNames(Object.getPrototypeOf(uploader)).filter(fn => typeof uploader[fn] === "function" && fn !== "constructor");
+    return res.status(200).json({
+      hosts: availableHosts
+    });
   }
-
   try {
     let buffer;
-    let fileName = 'unknown_file';
-    let host = req.query.host || 'Catbox';
-    const contentType = req.headers['content-type'];
-
-    if (contentType && contentType.startsWith('multipart/form-data')) {
-      const { fileBuffer, fileName: uploadedFileName } = await parseFormidable(req);
-      if (!fileBuffer) {
-        return res.status(400).json({ error: "File tidak ditemukan atau kosong. Pastikan field bernama 'file'." });
-      }
+    let fileName = "unknown_file";
+    let host = req.query.host || "Catbox";
+    const contentType = req.headers["content-type"] || "";
+    if (contentType.startsWith("multipart/form-data")) {
+      const {
+        buffer: fileBuffer,
+        fileName: uploadedFileName
+      } = await parseForm(req);
+      if (!fileBuffer) return res.status(400).json({
+        error: "Field 'file' kosong."
+      });
       buffer = fileBuffer;
-      fileName = uploadedFileName || fileName;
-    } else if (req.body) {
-      const media = req.body.file || req.body.url;
-      const urlRegex = /^(http|https):\/\/[^ "]+$/;
-      const base64Regex = /^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/;
-
+      fileName = uploadedFileName;
+    } else {
+      let rawBody = "";
+      await new Promise((resolve, reject) => {
+        req.on("data", chunk => rawBody += chunk);
+        req.on("end", resolve);
+        req.on("error", reject);
+      });
+      let parsed;
+      try {
+        parsed = JSON.parse(rawBody);
+      } catch {
+        return res.status(400).json({
+          error: "Gagal parsing JSON"
+        });
+      }
+      const media = parsed?.file || parsed?.url;
+      const urlRegex = /^https?:\/\/[^\s]+$/;
+      const base64Regex = /^data:([a-zA-Z0-9/+.-]+);base64,(.+)$/;
+      if (!media) return res.status(400).json({
+        error: "Field file/url kosong"
+      });
       if (urlRegex.test(media)) {
-        const response = await axios.get(media, { responseType: 'arraybuffer' });
-        buffer = Buffer.from(response.data);
-        fileName = media.split('/').pop().split('?')[0] || fileName;
+        const {
+          data,
+          headers
+        } = await axios.get(media, {
+          responseType: "arraybuffer"
+        });
+        buffer = Buffer.from(data);
+        fileName = media.split("/").pop().split("?")[0] || fileName;
       } else if (base64Regex.test(media)) {
         const [, mimeType, base64Data] = media.match(base64Regex);
-        buffer = Buffer.from(base64Data, 'base64');
-        const ext = mimeType.split('/')[1];
-        fileName = `uploaded.${ext}`;
+        buffer = Buffer.from(base64Data, "base64");
+        const ext = mimeType.split("/")[1];
+        fileName = `upload.${ext}`;
       } else {
         try {
-          buffer = Buffer.from(media, 'base64');
-          fileName = 'uploaded_data';
-        } catch {
+          buffer = Buffer.from(media, "base64");
+          fileName = "upload.bin";
+        } catch (e) {
           return res.status(400).json({
-            error: "Input 'file' atau 'url' tidak valid sebagai URL atau Base64.",
+            error: "Input bukan URL atau base64 yang valid"
           });
         }
       }
-    } else {
+    }
+    if (!buffer) {
       return res.status(400).json({
-        error: "File diperlukan. Kirim sebagai 'file' (FormData) atau 'file'/'url' (JSON).",
+        error: "Buffer kosong. Tidak dapat memproses file."
       });
     }
-
-    if (!buffer) {
-      return res.status(400).json({ error: 'Buffer file kosong. Pastikan data valid.' });
-    }
-
-    const uploaderInstance = new Uploader();
-    const availableHosts = Object.getOwnPropertyNames(Object.getPrototypeOf(uploaderInstance))
-      .filter(prop => typeof uploaderInstance[prop] === 'function' && prop !== 'constructor');
-
+    const uploader = new Uploader();
+    const availableHosts = Object.getOwnPropertyNames(Object.getPrototypeOf(uploader)).filter(fn => typeof uploader[fn] === "function" && fn !== "constructor");
     if (!availableHosts.includes(host)) {
       return res.status(400).json({
-        error: `Penyedia tidak valid. Gunakan salah satu dari: ${availableHosts.join(', ')}`,
+        error: `Penyedia tidak valid. Gunakan salah satu: ${availableHosts.join(", ")}`
       });
     }
-
     const spinner = createSpinner(`Mengunggah ke ${host}...`).start();
     try {
-      const result = await uploaderInstance[host](buffer, fileName);
-      spinner.succeed(chalk.green(`Unggahan berhasil ke ${host}`));
-      return res.status(200).json({ result, fileName });
+      const result = await uploader[host](buffer, fileName);
+      spinner.success({
+        text: chalk.green(`Unggahan berhasil ke ${host}`)
+      });
+      return res.status(200).json({
+        result: result,
+        fileName: fileName
+      });
     } catch (err) {
-      spinner.fail(chalk.red(`Unggahan gagal ke ${host}: ${err.message}`));
-      return res.status(500).json({ error: `Unggahan gagal ke ${host}: ${err.message}` });
+      spinner.error({
+        text: chalk.red(`Gagal unggah: ${err.message}`)
+      });
+      return res.status(500).json({
+        error: `Gagal unggah: ${err.message}`
+      });
     }
-  } catch (error) {
-    console.error('Error in upload handler:', error);
-    return res.status(500).json({ error: `Kesalahan saat unggahan: ${error.message}` });
+  } catch (err) {
+    console.error("Kesalahan di handler:", err);
+    return res.status(500).json({
+      error: `Kesalahan server: ${err.message}`
+    });
   }
 }
