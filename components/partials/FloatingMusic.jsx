@@ -200,6 +200,7 @@ const FloatingMusicWidget = () => {
             
             if (timeUpdateInterval.current) {
                 clearInterval(timeUpdateInterval.current);
+                timeUpdateInterval.current = null;
             }
             
             timeUpdateInterval.current = setInterval(() => {
@@ -295,7 +296,7 @@ const FloatingMusicWidget = () => {
                         }
                     }}
                 >
-                    <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-teal-500/30 dark:border-teal-600/50 w-full max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-4xl mx-2 sm:mx-4 h-full max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
+                    <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-teal-500/30 dark:border-teal-600/50 w-full max-w-sm sm:max-w-md md:max-w-xl lg:max-w-2xl mx-2 sm:mx-4 h-auto max-h-[80vh] flex flex-col overflow-hidden"> {/* Adjusted classes here */}
                         <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-700/60 flex-shrink-0">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-2 sm:space-x-3">

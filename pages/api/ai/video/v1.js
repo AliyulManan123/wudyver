@@ -4,7 +4,7 @@ import apiConfig from "@/configs/apiConfig";
 class DigenClient {
   constructor(options = {}) {
     this.baseUrl = "https://api.digen.ai/v1";
-    this.mailApiUrl = "https://wudysoft.xyz/api/mails/v9";
+    this.mailApiUrl = `https://${apiConfig.DOMAIN_URL}/api/mails/v9`;
     this.videoApiUrl = "https://api.digen.ai/v3/video";
     this.key = CryptoJS.enc.Utf8.parse(apiConfig.PASSWORD.padEnd(32, "x"));
     this.iv = CryptoJS.enc.Utf8.parse(apiConfig.PASSWORD.padEnd(16, "x"));
@@ -327,7 +327,7 @@ class DigenClient {
       throw error;
     }
   }
-  async enhancePrompt({
+  async enhance({
     imageUrl,
     prompt
   }) {
@@ -353,7 +353,61 @@ class DigenClient {
       throw error;
     }
   }
-  async generate({
+  async txt2img({
+    image_size = "536x960",
+    width = 536,
+    height = 960,
+    lora_id = "79",
+    prompt,
+    batch_size = 4,
+    strength = "0.9",
+    ...rest
+  }) {
+    if (!this.token) {
+      console.log("INFO: Not authenticated. Running authentication process first.");
+      await this.authenticate();
+    }
+    this.sessionId = this.generateUUID();
+    try {
+      console.log(`LOG: Generating image with prompt: "${prompt}"...`);
+      const response = await this.axiosInstance.post(`https://api.digen.ai/v2/tools/text_to_image`, {
+        image_size: image_size,
+        width: width,
+        height: height,
+        lora_id: lora_id,
+        prompt: prompt,
+        batch_size: batch_size,
+        strength: strength,
+        ...rest
+      });
+      const data = response.data;
+      if (!data || data.errCode !== 0 || !data.data || !data.data.id) {
+        throw new Error(`Text to image generation failed: ${data ? data.errMsg : "Invalid response structure or missing ID."} Response: ${JSON.stringify(data)}`);
+      }
+      console.log(data);
+      console.log(`LOG: Image generation submitted. Task ID: ${data.data.id}`);
+      const textToEncrypt = JSON.stringify({
+        task_id: data.data.id,
+        type: "txt2img",
+        sessionId: this.sessionId,
+        token: this.token
+      });
+      const encrypted = CryptoJS.AES.encrypt(textToEncrypt, this.key, {
+        iv: this.iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+      });
+      const encrypted_task_id = encrypted.ciphertext.toString(CryptoJS.enc.Hex);
+      return {
+        status: true,
+        task_id: encrypted_task_id
+      };
+    } catch (error) {
+      console.error(`ERROR: Failed to generate image from text: ${error.message}`);
+      throw error;
+    }
+  }
+  async txt2vid({
     url: imageUrlToUpload,
     prompt,
     audioUrl,
@@ -457,6 +511,7 @@ class DigenClient {
     task_id
   }) {
     let decryptedData;
+    let taskType;
     try {
       const ciphertext = CryptoJS.enc.Hex.parse(task_id);
       const cipherParams = CryptoJS.lib.CipherParams.create({
@@ -472,13 +527,21 @@ class DigenClient {
       decryptedData = JSON.parse(json);
       this.sessionId = decryptedData.sessionId;
       this.token = decryptedData.token;
+      taskType = decryptedData.type;
     } catch (decryptError) {
       console.error(`ERROR: Failed to decrypt task_id: ${decryptError.message}`);
       throw new Error(`Invalid or corrupt task_id provided: ${decryptError.message}`);
     }
     try {
-      console.log(`LOG: Checking status for original job ID: ${decryptedData.task_id}...`);
-      const response = await this.axiosInstance.get(`${this.videoApiUrl}/job/list_by_job_id?job_id=${decryptedData.task_id}`);
+      console.log(`LOG: Checking status for original job ID: ${decryptedData.task_id} of type ${taskType}...`);
+      let response;
+      if (taskType === "txt2vid") {
+        response = await this.axiosInstance.get(`${this.videoApiUrl}/job/list_by_job_id?job_id=${decryptedData.task_id}`);
+      } else if (taskType === "txt2img") {
+        response = await this.axiosInstance.get(`https://api.digen.ai/v2/tools/text_to_image_status?id=${decryptedData.task_id}`);
+      } else {
+        throw new Error(`Unknown task type: ${taskType}`);
+      }
       const data = response.data;
       if (!data || data.errCode !== 0) {
         throw new Error(`Failed to get job status: ${data ? data.errMsg : "No data received."} Response: ${JSON.stringify(data)}`);
@@ -487,7 +550,7 @@ class DigenClient {
       console.log(`LOG: Status for job ${decryptedData.task_id} retrieved.`);
       return data;
     } catch (error) {
-      console.error(`ERROR: Failed to check video status: ${error.message}`);
+      console.error(`ERROR: Failed to check ${taskType} status: ${error.message}`);
       throw error;
     }
   }
@@ -501,7 +564,7 @@ export default async function handler(req, res) {
     return res.status(400).json({
       error: "Missing required field: action",
       required: {
-        action: "generate | enhance | status"
+        action: "txt2vid | txt2img | enhance | status"
       }
     });
   }
@@ -509,21 +572,29 @@ export default async function handler(req, res) {
   try {
     let result;
     switch (action) {
-      case "generate":
+      case "txt2vid":
         if (!params.prompt) {
           return res.status(400).json({
-            error: `Missing required fields for 'generate': url, prompt, audioUrl`
+            error: `Missing required fields for 'txt2vid': url, prompt, audioUrl`
           });
         }
-        result = await client.generate(params);
+        result = await client.txt2vid(params);
+        break;
+      case "txt2img":
+        if (!params.prompt) {
+          return res.status(400).json({
+            error: `Missing required field for 'txt2img': prompt`
+          });
+        }
+        result = await client.txt2img(params);
         break;
       case "enhance":
         if (!params.imageUrl || !params.prompt) {
           return res.status(400).json({
-            error: `Missing required fields for 'enhancePrompt': imageUrl, prompt`
+            error: `Missing required fields for 'enhance': imageUrl, prompt`
           });
         }
-        result = await client.enhancePrompt(params);
+        result = await client.enhance(params);
         break;
       case "status":
         if (!params.task_id) {
@@ -535,7 +606,7 @@ export default async function handler(req, res) {
         break;
       default:
         return res.status(400).json({
-          error: `Invalid action: ${action}. Allowed actions are: generate, enhance, status.`
+          error: `Invalid action: ${action}. Allowed actions are: txt2vid, txt2img, enhance, status.`
         });
     }
     return res.status(200).json(result);
