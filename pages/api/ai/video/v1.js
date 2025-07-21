@@ -12,7 +12,7 @@ class DigenClient {
     this.baseUrl = "https://api.digen.ai/v1";
     this.mailApiUrl = `https://${apiConfig.DOMAIN_URL}/api/mails/v9`;
     this.videoApiUrl = "https://api.digen.ai/v3/video";
-    this.key = CryptoJS.enc.Utf8.parse(apiConfig.PASSWORD.*End(32, "x"));
+    this.key = CryptoJS.enc.Utf8.parse(apiConfig.PASSWORD.padEnd(32, "x"));
     this.iv = CryptoJS.enc.Utf8.parse(apiConfig.PASSWORD.padEnd(16, "x"));
     this.defaultPassword = this.generateRandomPassword(12);
     this.defaultName = "";
