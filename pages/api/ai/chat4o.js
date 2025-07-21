@@ -274,6 +274,23 @@ class Chat4oClient {
       throw error;
     }
   }
+  parseData(dataString) {
+    let combinedContent = "";
+    dataString.split("\n").forEach(line => {
+      const trimmedLine = line.trim();
+      if (trimmedLine.startsWith("data:")) {
+        try {
+          const parsedData = JSON.parse(trimmedLine.slice(5));
+          if (parsedData?.data?.content) {
+            combinedContent += parsedData.data.content;
+          }
+        } catch (e) {}
+      }
+    });
+    return {
+      result: combinedContent
+    };
+  }
   async chat({
     prompt: content,
     modelGrade = "pro",
@@ -309,7 +326,7 @@ class Chat4oClient {
       });
       const data = resp.data;
       console.log("LOG: Chat stream req sent. Initial resp received.");
-      return data;
+      return this.parseData(data);
     } catch (error) {
       console.error(`ERROR: Failed to init chat stream: ${error.message}`);
       throw error;

@@ -12,7 +12,7 @@ class DigenClient {
     this.baseUrl = "https://api.digen.ai/v1";
     this.mailApiUrl = `https://${apiConfig.DOMAIN_URL}/api/mails/v9`;
     this.videoApiUrl = "https://api.digen.ai/v3/video";
-    this.key = CryptoJS.enc.Utf8.parse(apiConfig.PASSWORD.padEnd(32, "x"));
+    this.key = CryptoJS.enc.Utf8.parse(apiConfig.PASSWORD.*End(32, "x"));
     this.iv = CryptoJS.enc.Utf8.parse(apiConfig.PASSWORD.padEnd(16, "x"));
     this.defaultPassword = this.generateRandomPassword(12);
     this.defaultName = "";
@@ -472,7 +472,11 @@ class DigenClient {
       console.log("INFO: Not authenticated. Running authentication process first.");
       await this.authenticate();
     }
-    const url = await this.uploadImage(imageUrlToUpload);
+    let url;
+    if (imageUrlToUpload) {
+       url = await this.uploadImage(imageUrlToUpload);
+    }
+    
     this.sessionId = this.generateUUID();
     const scene_params = {
       thumbnail: url,
@@ -548,7 +552,7 @@ class DigenClient {
       const encrypted = CryptoJS.AES.encrypt(textToEncrypt, this.key, {
         iv: this.iv,
         mode: CryptoJS.mode.CBC,
-        padding: CryptoJS.Pkcs7
+        padding: CryptoJS.pad.Pkcs7
       });
       const encrypted_task_id = encrypted.ciphertext.toString(CryptoJS.enc.Hex);
       return {
@@ -598,9 +602,11 @@ class DigenClient {
           headers: commonHeaders
         });
       } else if (taskType === "txt2img") {
-        response = await this.axiosInstance.get(`https://api.digen.ai/v2/tools/text_to_image_status?id=${decryptedData.task_id}`, {
-          headers: commonHeaders
-        });
+        response = await this.axiosInstance.post(`https://api.digen.ai/v6/video/get_task_v2`, {
+        jobID: decryptedData.task_id
+      }, {
+        headers: commonHeaders
+      });
       } else {
         throw new Error(`Unknown task type: ${taskType}`);
       }
