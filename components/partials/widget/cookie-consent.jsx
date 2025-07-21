@@ -5,6 +5,8 @@ import { ToastContainer, toast } from "react-toastify";
 import { Icon } from "@iconify/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
 
 const CustomCookieConsent = () => {
   const [visible, setVisible] = useState(false);
@@ -28,18 +30,21 @@ const CustomCookieConsent = () => {
   }, [status]);
 
   const acceptCookie = () => {
-    toast.success("Anda menyetujui penggunaan cookie.");
+    toast.success("Anda menyetujui penggunaan cookie. Selamat datang!");
     setVisible(false);
     router.push("/");
   };
 
   const declineCookie = () => {
-    toast.info("Anda menolak penggunaan cookie non-esensial.");
+    toast.info("Anda menolak penggunaan cookie non-esensial. Anda akan diarahkan ke halaman login.");
     setVisible(false);
     router.push("/login");
   };
 
   if (!visible) return null;
+
+  const buttonPrimaryClass = "flex-1 group relative overflow-hidden bg-gradient-to-r from-teal-500 via-teal-600 to-cyan-600 hover:from-teal-600 hover:via-teal-700 hover:to-cyan-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:shadow-teal-500/30 transition-all duration-300 transform hover:scale-[1.02] py-3 px-4 text-sm sm:text-base flex items-center justify-center space-x-2";
+  const buttonSecondaryClass = "flex-1 group relative overflow-hidden bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-xl shadow-lg hover:shadow-xl hover:shadow-slate-500/20 transition-all duration-300 transform hover:scale-[1.02] py-3 px-4 text-sm sm:text-base flex items-center justify-center space-x-2 border border-slate-200 dark:border-slate-600";
 
   return (
     <>
@@ -50,38 +55,35 @@ const CustomCookieConsent = () => {
         theme="colored"
         toastClassName={(options) =>
           `relative flex p-1 min-h-10 rounded-md justify-between overflow-hidden cursor-pointer
-           ${
-             options?.type === "success"
-               ? "bg-emerald-500 text-white"
-               : options?.type === "error"
-               ? "bg-red-500 text-white"
-               : options?.type === "warn"
-               ? "bg-yellow-500 text-white"
-               : "bg-sky-500 text-white"
-           } dark:text-slate-100 text-sm p-3 m-2 rounded-lg shadow-md`
+            ${
+              options?.type === "success"
+                ? "bg-emerald-500 text-white"
+                : options?.type === "error"
+                ? "bg-red-500 text-white"
+                : options?.type === "warn"
+                ? "bg-yellow-500 text-white"
+                : "bg-sky-500 text-white"
+            } dark:text-slate-100 text-sm p-3 m-2 rounded-lg shadow-md`
         }
       />
 
       <div className="fixed inset-0 z-[9998] bg-black/30 backdrop-blur-sm" />
 
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-        <div
+        <Card
+          bodyClass="relative p-5 sm:p-6 md:p-7 flex flex-col h-full overflow-hidden"
           className="w-full max-w-sm sm:max-w-md md:max-w-lg
                      min-h-fit max-h-[90vh] overflow-y-auto
                      border border-teal-400/40 dark:border-teal-500/60
                      rounded-2xl shadow-2xl shadow-teal-500/10
                      bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg
-                     p-5 sm:p-6 md:p-7
                      transition-all duration-500 ease-out
                      hover:shadow-3xl hover:shadow-teal-500/20"
         >
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center space-x-3">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-teal-400 to-cyan-500 text-white shadow-lg">
-                <Icon
-                  icon="material-symbols:cookie-outline"
-                  className="text-2xl"
-                />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-cyan-600 text-white shadow-md">
+                <Icon icon="material-symbols:cookie-outline" className="text-2xl" />
               </div>
               <div>
                 <h1 className="font-bold text-xl sm:text-2xl text-teal-600 dark:text-teal-300">
@@ -104,7 +106,7 @@ const CustomCookieConsent = () => {
             </button>
           </div>
 
-          <div className="space-y-4 mb-6">
+          <div className="space-y-4 mb-6 flex-grow">
             <div
               className="bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20
                          rounded-xl p-4 border border-teal-200/50 dark:border-teal-700/50"
@@ -171,48 +173,29 @@ const CustomCookieConsent = () => {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3">
-            <button
+          <div className="flex flex-col sm:flex-row gap-3 mt-auto pt-4 border-t border-slate-200 dark:border-slate-700/60">
+            <Button
               onClick={acceptCookie}
-              className="flex-1 group relative overflow-hidden
-                         bg-gradient-to-r from-teal-500 via-teal-600 to-cyan-600
-                         hover:from-teal-600 hover:via-teal-700 hover:to-cyan-700
-                         text-white font-semibold
-                         rounded-xl
-                         shadow-lg hover:shadow-xl hover:shadow-teal-500/30
-                         transition-all duration-300 transform hover:scale-[1.02]
-                         py-3 px-4
-                         text-sm sm:text-base
-                         flex items-center justify-center space-x-2"
-            >
-              <Icon
-                icon="material-symbols:check-circle-outline"
-                className="text-lg sm:text-xl group-hover:scale-110 transition-transform duration-200"
-              />
-              <span>Ya, Saya Setuju</span>
-              <div className="absolute inset-0 bg-white/10 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-            </button>
+              text={
+                <>
+                  <Icon icon="material-symbols:check-circle-outline" className="text-lg sm:text-xl group-hover:scale-110 transition-transform duration-200" />
+                  <span>Ya, Saya Setuju</span>
+                  <div className="absolute inset-0 bg-white/10 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                </>
+              }
+              className={buttonPrimaryClass}
+            />
 
-            <button
+            <Button
               onClick={declineCookie}
-              className="flex-1 group relative overflow-hidden
-                         bg-slate-100 hover:bg-slate-200
-                         dark:bg-slate-700 dark:hover:bg-slate-600
-                         text-slate-700 dark:text-slate-200 font-semibold
-                         rounded-xl
-                         shadow-lg hover:shadow-xl hover:shadow-slate-500/20
-                         transition-all duration-300 transform hover:scale-[1.02]
-                         py-3 px-4
-                         text-sm sm:text-base
-                         flex items-center justify-center space-x-2
-                         border border-slate-200 dark:border-slate-600"
-            >
-              <Icon
-                icon="material-symbols:cancel-outline"
-                className="text-lg sm:text-xl group-hover:scale-110 transition-transform duration-200"
-              />
-              <span>Tidak, Terima Kasih</span>
-            </button>
+              text={
+                <>
+                  <Icon icon="material-symbols:cancel-outline" className="text-lg sm:text-xl group-hover:scale-110 transition-transform duration-200" />
+                  <span>Tidak, Terima Kasih</span>
+                </>
+              }
+              className={buttonSecondaryClass}
+            />
           </div>
 
           <div className="mt-5 pt-4 border-t border-slate-200 dark:border-slate-600">
@@ -221,7 +204,7 @@ const CustomCookieConsent = () => {
               semua jenis cookie sesuai dengan kebijakan privasi kami.
             </p>
           </div>
-        </div>
+        </Card>
       </div>
     </>
   );

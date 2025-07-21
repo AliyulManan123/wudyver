@@ -1,6 +1,12 @@
 import axios from "axios";
 import CryptoJS from "crypto-js";
 import apiConfig from "@/configs/apiConfig";
+import {
+  CookieJar
+} from "tough-cookie";
+import {
+  wrapper
+} from "axios-cookiejar-support";
 class DigenClient {
   constructor(options = {}) {
     this.baseUrl = "https://api.digen.ai/v1";
@@ -22,7 +28,8 @@ class DigenClient {
     this.registerToken = null;
     this.lastOTP = null;
     this.spoofIp = this.generateRandomIp();
-    this.axiosInstance = axios.create({
+    this.cookieJar = new CookieJar();
+    this.axiosInstance = wrapper(axios.create({
       headers: {
         accept: "application/json, text/plain, */*",
         "accept-language": this.defaultLanguage,
@@ -40,16 +47,10 @@ class DigenClient {
         "digen-platform": this.defaultPlatform,
         origin: this.origin,
         referer: this.referer
-      }
-    });
-    this.axiosInstance.interceptors.request.use(config => {
-      config.headers["X-Forwarded-For"] = this.generateRandomIp();
-      config.headers["digen-token"] = this.token || "";
-      config.headers["digen-sessionid"] = this.sessionId || this.generateUUID();
-      return config;
-    }, error => {
-      return Promise.reject(error);
-    });
+      },
+      jar: this.cookieJar,
+      withCredentials: true
+    }));
     Object.assign(this, options);
   }
   generateUUID() {
@@ -126,6 +127,12 @@ class DigenClient {
       console.log("LOG: Sending verification code...");
       const response = await this.axiosInstance.post(`${this.baseUrl}/user/send_code`, {
         email: this.email
+      }, {
+        headers: {
+          "digen-token": this.token || this.generateUUID(),
+          "digen-sessionid": this.sessionId,
+          "X-Forwarded-For": this.generateRandomIp()
+        }
       });
       const data = response.data;
       if (!data || data.errCode !== 0) {
@@ -145,6 +152,12 @@ class DigenClient {
       const response = await this.axiosInstance.post(`${this.baseUrl}/user/verify_code`, {
         email: this.email,
         code: code
+      }, {
+        headers: {
+          "digen-token": this.token || this.generateUUID(),
+          "digen-sessionid": this.sessionId,
+          "X-Forwarded-For": this.generateRandomIp()
+        }
       });
       const data = response.data;
       if (!data || data.errCode !== 0) {
@@ -172,6 +185,12 @@ class DigenClient {
         password2: finalPassword,
         code: this.lastOTP,
         invite_code: null
+      }, {
+        headers: {
+          "digen-token": this.token || this.generateUUID(),
+          "digen-sessionid": this.sessionId,
+          "X-Forwarded-For": this.generateRandomIp()
+        }
       });
       const data = response.data;
       if (!data || data.errCode !== 0) {
@@ -192,7 +211,10 @@ class DigenClient {
       console.log("LOG: Getting login reward...");
       const response = await this.axiosInstance.post(`${this.baseUrl}/credit/reward?action=Login`, null, {
         headers: {
-          "content-length": "0"
+          "content-length": "0",
+          "digen-token": this.token,
+          "digen-sessionid": this.sessionId,
+          "X-Forwarded-For": this.generateRandomIp()
         }
       });
       const data = response.data;
@@ -240,7 +262,13 @@ class DigenClient {
     this.sessionId = this.generateUUID();
     try {
       console.log(`LOG: Getting presigned URL for format: ${format}...`);
-      const response = await this.axiosInstance.get(`${this.baseUrl}/element/priv/presign?format=${format}`);
+      const response = await this.axiosInstance.get(`${this.baseUrl}/element/priv/presign?format=${format}`, {
+        headers: {
+          "digen-token": this.token,
+          "digen-sessionid": this.sessionId,
+          "X-Forwarded-For": this.generateRandomIp()
+        }
+      });
       const data = response.data;
       if (!data || data.errCode !== 0 || !data.data || !data.data.url) {
         throw new Error(`Presign failed: ${data ? data.errMsg : "No data received or invalid format."} Response: ${JSON.stringify(data)}`);
@@ -285,6 +313,12 @@ class DigenClient {
         url: url,
         thumbnail: thumbnail || url,
         fileName: fileName
+      }, {
+        headers: {
+          "digen-token": this.token,
+          "digen-sessionid": this.sessionId,
+          "X-Forwarded-For": this.generateRandomIp()
+        }
       });
       const data = response.data;
       if (!data || data.errCode !== 0) {
@@ -341,6 +375,12 @@ class DigenClient {
       const response = await this.axiosInstance.post(`${this.baseUrl}/tools/enhance_prompt`, {
         url: imageUrl,
         prompt: prompt
+      }, {
+        headers: {
+          "digen-token": this.token,
+          "digen-sessionid": this.sessionId,
+          "X-Forwarded-For": this.generateRandomIp()
+        }
       });
       const data = response.data;
       if (!data || data.errCode !== 0) {
@@ -357,7 +397,7 @@ class DigenClient {
     image_size = "536x960",
     width = 536,
     height = 960,
-    lora_id = "79",
+    lora_id = "",
     prompt,
     batch_size = 4,
     strength = "0.9",
@@ -379,6 +419,12 @@ class DigenClient {
         batch_size: batch_size,
         strength: strength,
         ...rest
+      }, {
+        headers: {
+          "digen-token": this.token,
+          "digen-sessionid": this.sessionId,
+          "X-Forwarded-For": this.generateRandomIp()
+        }
       });
       const data = response.data;
       if (!data || data.errCode !== 0 || !data.data || !data.data.id) {
@@ -408,7 +454,7 @@ class DigenClient {
     }
   }
   async txt2vid({
-    url: imageUrlToUpload,
+    imageUrl: imageUrlToUpload,
     prompt,
     audioUrl,
     sceneId = "9",
@@ -480,6 +526,12 @@ class DigenClient {
         engine: engine,
         submitting: true,
         ...rest
+      }, {
+        headers: {
+          "digen-token": this.token,
+          "digen-sessionid": this.sessionId,
+          "X-Forwarded-For": this.generateRandomIp()
+        }
       });
       const data = response.data;
       if (!data || data.errCode !== 0 || !data.data || !data.data.jobId) {
@@ -489,13 +541,14 @@ class DigenClient {
       console.log(`LOG: Video generation submitted. Job ID: ${data.data.jobId}`);
       const textToEncrypt = JSON.stringify({
         task_id: data.data.jobId,
+        type: "txt2vid",
         sessionId: this.sessionId,
         token: this.token
       });
       const encrypted = CryptoJS.AES.encrypt(textToEncrypt, this.key, {
         iv: this.iv,
         mode: CryptoJS.mode.CBC,
-        padding: CryptoJS.pad.Pkcs7
+        padding: CryptoJS.Pkcs7
       });
       const encrypted_task_id = encrypted.ciphertext.toString(CryptoJS.enc.Hex);
       return {
@@ -535,10 +588,19 @@ class DigenClient {
     try {
       console.log(`LOG: Checking status for original job ID: ${decryptedData.task_id} of type ${taskType}...`);
       let response;
+      const commonHeaders = {
+        "digen-token": this.token,
+        "digen-sessionid": this.sessionId,
+        "X-Forwarded-For": this.generateRandomIp()
+      };
       if (taskType === "txt2vid") {
-        response = await this.axiosInstance.get(`${this.videoApiUrl}/job/list_by_job_id?job_id=${decryptedData.task_id}`);
+        response = await this.axiosInstance.get(`${this.videoApiUrl}/job/list_by_job_id?job_id=${decryptedData.task_id}`, {
+          headers: commonHeaders
+        });
       } else if (taskType === "txt2img") {
-        response = await this.axiosInstance.get(`https://api.digen.ai/v2/tools/text_to_image_status?id=${decryptedData.task_id}`);
+        response = await this.axiosInstance.get(`https://api.digen.ai/v2/tools/text_to_image_status?id=${decryptedData.task_id}`, {
+          headers: commonHeaders
+        });
       } else {
         throw new Error(`Unknown task type: ${taskType}`);
       }
@@ -573,9 +635,9 @@ export default async function handler(req, res) {
     let result;
     switch (action) {
       case "txt2vid":
-        if (!params.prompt) {
+        if (!params.imageUrl || !params.prompt) {
           return res.status(400).json({
-            error: `Missing required fields for 'txt2vid': url, prompt, audioUrl`
+            error: `Missing required fields for 'txt2vid': imageUrl, prompt, audioUrl`
           });
         }
         result = await client.txt2vid(params);

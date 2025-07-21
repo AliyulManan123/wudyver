@@ -351,10 +351,10 @@ const CompilerPage = () => {
               </div>
               <textarea
                 placeholder="Tulis kode Anda di sini..."
-                rows="15"
+                // Removed 'rows="15"' and added dynamic height or max-height
+                className="w-full bg-white dark:bg-slate-600 border border-slate-300 dark:border-slate-500 text-slate-900 dark:text-slate-200 rounded-md font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm p-3 resize-y min-h-[150px] max-h-[400px]" // Added min-h and max-h for responsiveness
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                className="w-full bg-white dark:bg-slate-600 border border-slate-300 dark:border-slate-500 text-slate-900 dark:text-slate-200 rounded-md font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm p-3 resize-none"
               />
               {code && (
                 <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
