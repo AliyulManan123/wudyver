@@ -106,6 +106,8 @@ export async function middleware(req) {
     response.headers.set("Access-Control-Allow-Credentials", "true");
     response.headers.set("Content-Security-Policy", cspHeader.replace(/\s{2,}/g, " ").trim());
     console.log("[Middleware-Main] Header keamanan telah diatur.");
+
+    // Rate limiting untuk semua API routes (kecuali yang dikecualikan)
     if (isApiRoute && !isVisitorApi && !isAuthApi && !isGeneralApi) {
       console.log(`[Middleware-RateLimit] Menerapkan Rate Limiting untuk API: ${pathname}`);
       try {
@@ -145,7 +147,17 @@ export async function middleware(req) {
         return errorResponse;
       }
     }
+
     const redirectUrlWithProtocol = ensureProtocol(DOMAIN_URL, DEFAULT_PROTOCOL);
+    
+    // Jika ini adalah API route, izinkan akses tanpa otentikasi
+    if (isApiRoute) {
+      console.log(`[Middleware-Auth] API route ${pathname} diakses, melanjutkan tanpa pengecekan autentikasi.`);
+      await performTracking(req);
+      return response;
+    }
+
+    // Logika autentikasi hanya untuk non-API routes
     if (isAuthenticated) {
       if (isAuthPage) {
         console.log(`[Middleware-Auth] Pengguna terautentikasi mencoba mengakses halaman otentikasi (${pathname}). Mengarahkan ke /analytics.`);
@@ -160,7 +172,8 @@ export async function middleware(req) {
       await performTracking(req);
       return response;
     } else {
-      const isPublicPath = isAuthPage || isVisitorApi || isAuthApi || isGeneralApi;
+      // Untuk non-API routes, cek apakah ini halaman publik
+      const isPublicPath = isAuthPage;
       if (!isPublicPath) {
         console.log(`[Middleware-Auth] Pengguna belum terautentikasi mencoba mengakses ${pathname}. Mengarahkan ke /login.`);
         await performTracking(req);
