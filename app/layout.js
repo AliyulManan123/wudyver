@@ -2,97 +2,92 @@ import { Inter } from "next/font/google";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Providers from "./providers";
-import apiConfig from "@/configs/apiConfig";
+import { generateMetadata } from "./head";
+import { ImageResponse } from "next/og";
 
 const inter = Inter({ subsets: ["latin"] });
 
-const domain = `https://${apiConfig.DOMAIN_URL}`;
-const faviconIcoPath = "/favicon.ico";
-const faviconPngPath = "/favicon.png";
-const faviconSvgPath = "/favicon.svg";
-const pwaIcon192 = "/images/favicon/favicon.png";
-const pwaIcon512 = "/images/favicon/favicon.png";
-const appleTouchIcon = "/images/favicon/favicon.png";
-const socialShareImage = "/assets/images/all-img/main-user.png";
-
-export const metadata = {
-  metadataBase: new URL(domain),
-  title: "DashCode API Dashboard",
-  description: "DashCode API Dashboard: Template admin open-source Next.js 13 dengan fitur API dan komponen server terbaru. Futuristik, cepat, dan responsif.",
-  generator: "Next.js 13",
-  manifest: "/manifest.json",
-  keywords: [
-    "nextjs", "next14", "pwa", "next-pwa", "dashcode", "admin", "dashboard",
-    "DashCode", "Web API", "Next.js 13", "Dashboard admin", "template admin",
-    "aplikasi web", "open-source", "server components", "PWA", "modern", "futuristik"
-  ],
-  themeColor: "#2196F3",
-  authors: [
-    { name: "AyGemuy", url: "https://www.github.com/AyGemuy/" },
-    { name: "DashCode Developer" }
-  ],
-  viewport:
-    "minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, user-scalable=no, viewport-fit=cover",
-  icons: {
-    icon: [
-      { url: faviconPngPath, sizes: "any", type: "image/png" },
-      { url: faviconIcoPath, sizes: "any", type: "image/x-icon" },
-      { url: faviconSvgPath, type: "image/svg+xml" },
-      { rel: "mask-icon", url: faviconSvgPath, color: "#2196F3" },
-    ],
-    apple: [{ url: appleTouchIcon, sizes: "180x180" }],
-  },
-  appleWebApp: {
-    capable: true,
-    title: "DashCode",
-    statusBarStyle: "default",
-  },
-  applicationName: "DashCode API Dashboard",
-  alternates: { canonical: domain },
-  openGraph: {
-    type: "website",
-    title: "DashCode API Dashboard - Modern Admin Panel",
-    description: "Jelajahi DashCode API Dashboard, template admin Next.js 13 open-source dengan performa tinggi dan desain futuristik. Dibangun untuk aplikasi web modern.",
-    url: domain,
-    siteName: "DashCode",
-    images: [{ url: `${domain}${socialShareImage}`, width: 1200, height: 630, alt: "DashCode API Dashboard Social Share Image" }],
-    locale: "id_ID",
-  },
-  twitter: {
-    card: "summary_large_image",
-    site: "@DashCode_dev",
-    creator: "@DashCode_dev",
-    title: "DashCode API Dashboard - Modern Admin Panel",
-    description: "DashCode API Dashboard: Template admin Next.js 13 open-source dengan fitur API dan komponen server terbaru. Futuristik, cepat, dan responsif.",
-    images: [`${domain}${socialShareImage}`],
-  },
-  verification: {
-    google: "E5QX7KBlw_hIr1JP7QY6n_A74Uys6lCj-KfGws9UrV4",
-  },
-  other: {
-    "format-detection": "telephone=no",
-    "mobile-web-app-capable": "yes",
-    "msapplication-config": "/browserconfig.xml",
-    "msapplication-TileColor": "#2B5797",
-    "msapplication-tap-highlight": "no",
-    "google-adsense-account": "ca-pub-1389266588531643",
-  },
-};
+// Export metadata dari head.js
+export { metadata } from "./head";
 
 export default async function RootLayout({ children }) {
   const session = await getServerSession(authOptions);
-
+  
   return (
     <html lang="id">
       <head>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" />
+        {/* Preconnect untuk performance */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
+        <link rel="preconnect" href="https://pagead2.googlesyndication.com" />
+        
+        {/* Fonts */}
+        <link 
+          rel="stylesheet" 
+          href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" 
+        />
+        
+        {/* Additional SEO meta tags */}
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        <meta name="googlebot" content="index, follow" />
+        <meta name="bingbot" content="index, follow" />
+        
+        {/* Performance hints */}
+        <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="//pagead2.googlesyndication.com" />
+        
+        {/* Security headers */}
+        <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
+        <meta httpEquiv="X-Frame-Options" content="DENY" />
+        <meta httpEquiv="X-XSS-Protection" content="1; mode=block" />
+        
+        {/* Additional PWA meta tags */}
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="DashCode" />
+        
+        {/* Structured data for organization */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              "name": "DashCode API Dashboard",
+              "description": "Template admin Next.js 13 open-source dengan fitur API dan komponen server terbaru",
+              "url": "https://wudysoft.xyz",
+              "applicationCategory": "BusinessApplication",
+              "operatingSystem": "Web Browser",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+              }
+            })
+          }}
+        />
       </head>
       <body className={`${inter.className} font-inter custom-tippy dashcode-app`}>
+        {/* Google AdSense */}
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1389266588531643"
           crossOrigin="anonymous"
-        ></script>
+        />
+        
+        {/* Google Analytics (optional) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'GA_MEASUREMENT_ID');
+            `
+          }}
+        />
+        
         <Providers session={session}>
           {children}
         </Providers>
