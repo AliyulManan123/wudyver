@@ -398,7 +398,7 @@ class DigenClient {
     width = 536,
     height = 960,
     lora_id = "",
-    prompt,
+    prompt = "A man with short dark hair, wearing a black jacket over a plaid shirt, is captured mid-flight against a backdrop of tall trees and dappled sunlight. His expression is serious, and he appears to be gliding gracefully through the air. The camera follows him smoothly, creating a sense of motion and freedom. The scene is set in a serene forest, with soft shadows and natural light highlighting his silhouette.",
     batch_size = 4,
     strength = "0.9",
     ...rest
@@ -455,8 +455,8 @@ class DigenClient {
   }
   async txt2vid({
     imageUrl: imageUrlToUpload,
-    prompt,
-    audioUrl,
+    prompt = "A man with short dark hair, wearing a black jacket over a plaid shirt, is captured mid-flight against a backdrop of tall trees and dappled sunlight. His expression is serious, and he appears to be gliding gracefully through the air. The camera follows him smoothly, creating a sense of motion and freedom. The scene is set in a serene forest, with soft shadows and natural light highlighting his silhouette.",
+    audioUrl = "https://digen-asset.s3.us-west-1.amazonaws.com/audio/En-326.MP3",
     sceneId = "9",
     model = "lora",
     loraId = "85",
@@ -474,9 +474,8 @@ class DigenClient {
     }
     let url;
     if (imageUrlToUpload) {
-       url = await this.uploadImage(imageUrlToUpload);
+      url = await this.uploadImage(imageUrlToUpload);
     }
-    
     this.sessionId = this.generateUUID();
     const scene_params = {
       thumbnail: url,
@@ -603,10 +602,10 @@ class DigenClient {
         });
       } else if (taskType === "txt2img") {
         response = await this.axiosInstance.post(`https://api.digen.ai/v6/video/get_task_v2`, {
-        jobID: decryptedData.task_id
-      }, {
-        headers: commonHeaders
-      });
+          jobID: decryptedData.task_id
+        }, {
+          headers: commonHeaders
+        });
       } else {
         throw new Error(`Unknown task type: ${taskType}`);
       }

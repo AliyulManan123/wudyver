@@ -237,8 +237,8 @@ class AkoolAPI {
     }
   }
   async generate({
-    action = "txt2img",
-    ...params
+    prompt,
+    ...rest
   }) {
     if (!this.authToken && !this.isRegistering) {
       console.log("Authentication token not available. Initiating automatic registration...");
@@ -262,21 +262,6 @@ class AkoolAPI {
     if (!this.gbuuid) {
       throw new Error("gbuuid is not available. It should be set after the initial page visit.");
     }
-    switch (action) {
-      case "txt2img":
-        return await this.generateTextToImage(params);
-      case "img2vid":
-        return await this.generateImageToVideo(params);
-      case "img2talk":
-        return await this.generateImageToTalk(params);
-      default:
-        throw new Error(`Unsupported action: ${action}. Supported actions: txt2img, img2vid, img2talk`);
-    }
-  }
-  async generateTextToImage({
-    prompt,
-    ...rest
-  }) {
     const data = {
       prompt: prompt,
       ...rest
@@ -300,118 +285,7 @@ class AkoolAPI {
         throw new Error("task_id not found in initial image creation response.");
       }
     } catch (error) {
-      console.error("Error generating text to image content.");
-      throw error;
-    }
-  }
-  async generateImageToVideo({
-    imageUrl,
-    prompt = "Animate this image with smooth camera movement and subtle object motion.",
-    duration = 5,
-    negativePrompt = "blurry, distorted hands, missing fingers, unnatural pose, double hands, extra limbs, bad anatomy, low quality, cartoonish, exaggerated features, open mouth, aggressive expression, modern clothing, pixelated, vibrant colors, overexposed, flickering, blurry details, subtitles, logo, style, artwork, painting, picture, static, overall grayish, worst quality, JPEG compression artifacts, ugly, incomplete, extra fingers, poorly drawn hands, poorly drawn face, deformed, disfigured, malformed limbs, fused fingers, static characters, messy background, three legs, crowded background, walking backwards",
-    extendPrompt = true,
-    resolution = "720p",
-    audio_type = 1,
-    ...rest
-  }) {
-    if (!imageUrl) {
-      throw new Error("imageUrl is required for img2vid action");
-    }
-    const data = {
-      imageUrl: imageUrl,
-      prompt: prompt,
-      duration: duration,
-      negativePrompt: negativePrompt,
-      extendPrompt: extendPrompt,
-      resolution: resolution,
-      audio_type: audio_type,
-      _id: this.randomID(12),
-      ...rest
-    };
-    try {
-      const videoCreationResponse = await this.axiosInstance.post("/interface/content-api/api/v7/content/image2Video/createBySourcePrompt", data, {
-        headers: this.buildHeaders({
-          "Content-Type": "application/json",
-          Origin: "https://akool.com",
-          Referer: "https://akool.com/id-id/apps/image-to-video/edit",
-          Priority: "u=1, i"
-        })
-      });
-      console.log("Initial video creation response:", videoCreationResponse.data);
-      if (videoCreationResponse.data && videoCreationResponse.data.data && videoCreationResponse.data.data.task_id) {
-        const taskId = videoCreationResponse.data.data.task_id;
-        console.log(`Polling video history for task_id: ${taskId}`);
-        const finalResult = await this.pollVideoHistory(taskId, 15);
-        return finalResult;
-      } else {
-        throw new Error("task_id not found in initial video creation response.");
-      }
-    } catch (error) {
-      console.error("Error generating image to video content.");
-      throw error;
-    }
-  }
-  async generateImageToTalk({
-    talking_photo_url,
-    input_text = "Welcome to the Akool generative AI content creation tool. Enter any text here to generate a voice file.",
-    voice_id = "en-US-AvaMultilingualNeural",
-    rate = "100%",
-    ratio = "768:1280",
-    file_name = "ai_visualize.webp",
-    input_audio = "",
-    video_url = "",
-    emotion_url = "",
-    emotion_prompt = "",
-    emotion_from = 0,
-    audio_id = "",
-    profile_id = "",
-    emotion_id = "",
-    post_id = "",
-    priority = 1,
-    ...rest
-  }) {
-    if (!talking_photo_url) {
-      throw new Error("talking_photo_url is required for img2talk action");
-    }
-    const data = {
-      priority: priority,
-      input_text: input_text,
-      input_audio: input_audio,
-      voice_id: voice_id,
-      rate: rate,
-      talking_photo_url: talking_photo_url,
-      video_url: video_url,
-      ratio: ratio,
-      emotion_url: emotion_url,
-      emotion_prompt: emotion_prompt,
-      emotion_from: emotion_from,
-      file_name: file_name,
-      audio_id: audio_id,
-      profile_id: profile_id,
-      emotion_id: emotion_id,
-      post_id: post_id,
-      ...rest
-    };
-    try {
-      const talkCreationResponse = await this.axiosInstance.post("/interface/content-api/api/v7/content/talkingphoto/create", data, {
-        headers: this.buildHeaders({
-          "Content-Type": "application/json",
-          Origin: "https://akool.com",
-          Referer: "https://akool.com/id-id/apps/talking-photo/edit",
-          Priority: "u=1, i"
-        })
-      });
-      console.log("Initial talking photo creation response:", talkCreationResponse.data);
-      if (talkCreationResponse.data && talkCreationResponse.data.data && talkCreationResponse.data.data.task_id) {
-        const taskId = talkCreationResponse.data.data.task_id;
-        console.log(`Polling talking photo history for task_id: ${taskId}`);
-        const finalResult = await this.pollVideoHistory(taskId, 5);
-        return finalResult;
-      } else {
-        throw new Error("task_id not found in initial talking photo creation response.");
-      }
-    } catch (error) {
-      console.error("Error generating image to talk content.");
+      console.error("Error generating content.");
       throw error;
     }
   }
@@ -495,82 +369,21 @@ class AkoolAPI {
     }
     throw new Error(`Image generation for task ${taskId} timed out after ${maxAttempts} attempts.`);
   }
-  async pollVideoHistory(taskId, type, interval = 5e3, maxAttempts = 60) {
-    if (!this.authToken) {
-      throw new Error("Authentication token not available. Make sure you are logged in or registered.");
-    }
-    if (!this.gbuuid) {
-      throw new Error("gbuuid is not available. Make sure you have visited the initial page.");
-    }
-    const url = `https://akool.com/interface/content-api/api/v6/content/resourceResult/list?page=1&size=10&type=${type}&media_type=video`;
-    let attempts = 0;
-    while (attempts < maxAttempts) {
-      try {
-        const response = await this.axiosInstance.get(url, {
-          headers: this.buildHeaders({
-            accept: "application/json, text/plain, */*",
-            "accept-language": "id-ID,id;q=0.9",
-            priority: "u=1, i",
-            referer: type === 15 ? "https://akool.com/id-id/apps/image-to-video/edit" : "https://akool.com/id-id/apps/talking-photo/edit"
-          })
-        });
-        console.log(`Polling video history attempt ${attempts + 1}:`, response.data);
-        if (response.data && response.data.data && response.data.data.result) {
-          const foundVideo = response.data.data.result.find(item => item.task_id === taskId && (item.status === 3 || item.status === "completed"));
-          if (foundVideo) {
-            console.log(`Video task ${taskId} found with success status.`);
-            return foundVideo;
-          }
-        }
-        await new Promise(resolve => setTimeout(resolve, interval));
-        attempts++;
-      } catch (error) {
-        console.error(`Error during polling video history for task ${taskId}:`, error.message);
-        throw error;
-      }
-    }
-    throw new Error(`Video generation for task ${taskId} timed out after ${maxAttempts} attempts.`);
-  }
 }
 export default async function handler(req, res) {
   const params = req.method === "GET" ? req.query : req.body;
-  const action = params.action || "txt2img";
-  switch (action) {
-    case "txt2img":
-      if (!params.prompt) {
-        return res.status(400).json({
-          error: "prompt is required for txt2img action"
-        });
-      }
-      break;
-    case "img2vid":
-      if (!params.imageUrl) {
-        return res.status(400).json({
-          error: "imageUrl is required for img2vid action"
-        });
-      }
-      break;
-    case "img2talk":
-      if (!params.talking_photo_url) {
-        return res.status(400).json({
-          error: "talking_photo_url is required for img2talk action"
-        });
-      }
-      break;
-    default:
-      return res.status(400).json({
-        error: "Invalid action specified"
-      });
+  if (!params.prompt) {
+    return res.status(400).json({
+      error: "prompt is required"
+    });
   }
   const akoolApi = new AkoolAPI();
   try {
     const data = await akoolApi.generate(params);
     return res.status(200).json(data);
   } catch (error) {
-    console.error("Error during generation:", error.message);
     res.status(500).json({
-      error: "Error during generation request",
-      message: error.message
+      error: "Error during chat request"
     });
   }
 }
