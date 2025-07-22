@@ -16,6 +16,7 @@ const appleTouchIcon = "/images/favicon/favicon.png";
 const socialShareImage = "/assets/images/all-img/main-user.png";
 
 export const metadata = {
+  metadataBase: new URL(domain),
   title: "DashCode API Dashboard",
   description: "DashCode API Dashboard: Template admin open-source Next.js 13 dengan fitur API dan komponen server terbaru. Futuristik, cepat, dan responsif.",
   generator: "Next.js 13",

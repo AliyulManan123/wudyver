@@ -24,17 +24,26 @@
     {
       "src": "/images/favicon/favicon.png",
       "sizes": "256x256",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/images/favicon/favicon.png",
       "sizes": "384x384",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/images/favicon/favicon.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/favicon/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "screenshots": [
@@ -42,14 +51,14 @@
       "src": "/assets/images/all-img/widget-bg-1.png",
       "sizes": "1280x800",
       "type": "image/png",
-      "platform": "wide",
+      "form_factor": "wide",
       "label": "Tampilan Dashboard Utama"
     },
     {
       "src": "/assets/images/all-img/widget-bg-2.png",
       "sizes": "640x1136",
       "type": "image/png",
-      "platform": "narrow",
+      "form_factor": "narrow",
       "label": "Tampilan Mobile Aplikasi"
     }
   ],
@@ -59,14 +68,14 @@
       "short_name": "Dashboard",
       "description": "Akses langsung ke halaman dashboard utama.",
       "url": "/",
-      "icons": [{ "src": "/assets/images/icon/home.svg", "sizes": "96x96" }]
+      "icons": [{ "src": "/assets/images/icon/home.svg", "sizes": "96x96", "type": "image/svg+xml" }]
     },
     {
       "name": "Lihat Pengaturan",
       "short_name": "Pengaturan",
       "description": "Mengelola preferensi aplikasi Anda.",
       "url": "/settings",
-      "icons": [{ "src": "/assets/images/icon/file-1.svg", "sizes": "96x96" }]
+      "icons": [{ "src": "/assets/images/icon/file-1.svg", "sizes": "96x96", "type": "image/svg+xml" }]
     }
   ]
 }
