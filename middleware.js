@@ -65,9 +65,9 @@ async function performTracking(req) {
   }
 }
 const cspHeader = `
-  frame-ancestors 'none';
-  block-all-mixed-content;
-  upgrade-insecure-requests;
+    frame-ancestors 'none';
+    block-all-mixed-content;
+    upgrade-insecure-requests;
 `;
 export async function middleware(req) {
   const url = new URL(req.url);
@@ -83,11 +83,14 @@ export async function middleware(req) {
     const isRegisterRoute = pathname === "/register";
     const isAuthPage = isLoginRoute || isRegisterRoute;
     const isAnalyticsRoute = pathname === "/analytics";
-    const isRootRoute = pathname === "/";
+    const isVisitorApi = pathname.includes("/api/visitor");
+    const isAuthApi = pathname.includes("/api/auth");
+    const isGeneralApi = pathname.includes("/api/general");
     const nextAuthToken = await getToken({
       req: req,
       secret: NEXTAUTH_SECRET
     });
+    console.log("[Middleware] nextAuthToken:", nextAuthToken);
     const isAuthenticated = !!nextAuthToken;
     console.log(`[Middleware] Pathname: ${pathname}, Autentikasi: ${isAuthenticated ? "Ya" : "Tidak"}`);
     response.headers.set("X-Content-Type-Options", "nosniff");
@@ -101,9 +104,6 @@ export async function middleware(req) {
     response.headers.set("Access-Control-Allow-Credentials", "true");
     response.headers.set("Content-Security-Policy", cspHeader.replace(/\s{2,}/g, " ").trim());
     console.log("[Middleware] Header keamanan telah diatur.");
-    const isVisitorApi = pathname.includes("/api/visitor");
-    const isAuthApi = pathname.includes("/api/auth");
-    const isGeneralApi = pathname.includes("/api/general");
     if (isApiRoute && !isVisitorApi && !isAuthApi && !isGeneralApi) {
       console.log(`[Middleware] Menerapkan Rate Limiting untuk API: ${pathname}`);
       try {
@@ -147,16 +147,13 @@ export async function middleware(req) {
         console.log(`[Middleware] Pengguna terautentikasi mencoba mengakses halaman otentikasi (${pathname}). Mengarahkan ke /analytics.`);
         await performTracking(req);
         return NextResponse.redirect(`${redirectUrlWithProtocol}/analytics`);
-      } else if (isRootRoute) {
-        console.log(`[Middleware] Pengguna terautentikasi mengakses halaman home (/). Mengarahkan ke /analytics.`);
-        await performTracking(req);
-        return NextResponse.redirect(`${redirectUrlWithProtocol}/analytics`);
       }
       console.log(`[Middleware] Pengguna terautentikasi melanjutkan ke ${pathname}.`);
       await performTracking(req);
       return response;
     } else {
-      if (isAnalyticsRoute || isRootRoute) {
+      const isPublicPath = isAuthPage || isVisitorApi || isAuthApi || isGeneralApi;
+      if (!isPublicPath) {
         console.log(`[Middleware] Pengguna belum terautentikasi mencoba mengakses ${pathname}. Mengarahkan ke /login.`);
         await performTracking(req);
         return NextResponse.redirect(`${redirectUrlWithProtocol}/login`);
