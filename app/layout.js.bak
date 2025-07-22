@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Providers from "./providers";
 import { generateMetadata } from "./head";
+import { ImageResponse } from "next/og";
 
 const inter = Inter({ subsets: ["latin"] });
 
