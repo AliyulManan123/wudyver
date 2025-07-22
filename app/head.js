@@ -7,7 +7,7 @@ const faviconSvgPath = "/favicon.svg";
 const pwaIcon192 = "/images/favicon/favicon.png";
 const pwaIcon512 = "/images/favicon/favicon.png";
 const appleTouchIcon = "/images/favicon/favicon.png";
-const socialShareImage = "/assets/images/all-img/main-user.png";
+const socialShareImage = "/images/favicon/favicon.png";
 
 export const metadata = {
   metadataBase: new URL(domain),
