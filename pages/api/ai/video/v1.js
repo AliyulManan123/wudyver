@@ -454,12 +454,12 @@ class DigenClient {
     }
   }
   async txt2vid({
-    imageUrl: imageUrlToUpload,
-    prompt = "A man with short dark hair, wearing a black jacket over a plaid shirt, is captured mid-flight against a backdrop of tall trees and dappled sunlight. His expression is serious, and he appears to be gliding gracefully through the air. The camera follows him smoothly, creating a sense of motion and freedom. The scene is set in a serene forest, with soft shadows and natural light highlighting his silhouette.",
+    imageUrl: imageUrlToUpload = "https://digen-asset.s3.us-west-1.amazonaws.com/image/1180206_1753158414637514615_a5be34e8-d346-458f-a480-33070fe281db.jpeg",
+    prompt = "There is a subject in the video. digen050 gentleman time, the subject puts on a dark blue suit jacket, adjusts the shoulder area, pulls it over the arm, smooths the jacket, and then places both hands into the pockets. The facial expression remains neutral throughout, with a subtle smile and relaxed eyes., digen050.",
     audioUrl = "https://digen-asset.s3.us-west-1.amazonaws.com/audio/En-326.MP3",
     sceneId = "9",
     model = "lora",
-    loraId = "85",
+    loraId = "77",
     ratio = "portrait",
     seconds = "5",
     strength = "1.0",
@@ -640,9 +640,9 @@ export default async function handler(req, res) {
     let result;
     switch (action) {
       case "txt2vid":
-        if (!params.imageUrl || !params.prompt) {
+        if (!params.prompt) {
           return res.status(400).json({
-            error: `Missing required fields for 'txt2vid': imageUrl, prompt, audioUrl`
+            error: `Missing required fields for 'txt2vid': prompt`
           });
         }
         result = await client.txt2vid(params);
