@@ -22,7 +22,7 @@
     "@south-paw/react-vector-maps": "^3.2.0",
     "@svg-maps/world": "^1.0.1",
     "@tippyjs/react": "^4.2.6",
-    "apexcharts": "^3.49.0",
+    "apexcharts": "^4.0.2",
     "chart.js": "^4.4.2",
     "cleave.js": "^1.6.0",
     "dayjs": "^1.11.10",
