@@ -18,7 +18,7 @@
 
 ---
 
-## ⚡️ About DashAPI
+## ⚡️ About DashAPIs
 
 > DashAPI is a futuristic API-first platform built using **Next.js 14**, powered by **Dashcode UI** for sleek interfaces and **fully animated widget dashboards**.
 
